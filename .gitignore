@@ -1,0 +1,5 @@
+.directory
+main
+*.exe
+*.o
+build
