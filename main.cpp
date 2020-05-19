@@ -15,7 +15,7 @@ typedef struct{
 	short type = 0; // 0=vuota,1=bianca, 2=nera, 3=gia passata
 } cell;
 
-int find(rc start,rc position,vector<vector<cell>> matrix,stringbuf *giro);
+int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max);
 
 int main(int argc, char **argv){
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv){
 		matrix[r][c].type = 1;
 	}
 
-	rc start;
+	rc start=rc(1,1);
 	if(B>0){
 		start=blacks[0];
 	}else{
@@ -73,12 +73,18 @@ int main(int argc, char **argv){
 		}
 		cout << endl;
 	}
+	cout<< "ciao" <<endl;
+
+	//int res=find(start, start, matrix, rings, 0);
 	return 0;
 }
 
-int find(rc start,rc position,vector<vector<cell>> matrix,stringbuf *giro,int rings){
+int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
+	int rPath;
+	cout << 1;
 	if(position==start && rings>1){
 		return rings;
+		cout << 1;
 	}
 	if(position!=start){
 		if(matrix[position.first][position.second].type==1 || matrix[position.first][position.second].type==2){
@@ -86,37 +92,55 @@ int find(rc start,rc position,vector<vector<cell>> matrix,stringbuf *giro,int ri
 		}
 	}
 	if(matrix[position.first][position.second].R && matrix[position.first+1][position.second].type!=3){
-		giro->sputc('R');
+		cout << 1;
+		//giro->sputc('R');
 		matrix[position.first+1][position.second].type=3;
 		rc tmp;
 		tmp.first=position.first+1;
 		tmp.second=position.second;
-		find(start,tmp,matrix,giro);
+		rPath=find(start,tmp,matrix,rings,max);
+		if(rPath>max){
+			max=rPath;
+		}
 	}
 
 
 	if(matrix[position.first][position.second].D && matrix[position.first][position.second+1].type!=3){
-		giro->sputc('D');
+		cout << 1;
+		//giro->sputc('D');
 		matrix[position.first][position.second+1].type=3;
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second+1;
-		find(start,tmp,matrix,giro);
+		rPath=find(start,tmp,matrix,rings,max);
+		if(rPath>max){
+			max=rPath;
+		}	
 	}
+
 	if(matrix[position.first][position.second].L && matrix[position.first-1][position.second].type!=3){
-		giro->sputc('L');
+		cout << 1;
+		//giro->sputc('L');
 		matrix[position.first-1][position.second].type=3;
 		rc tmp;
 		tmp.first=position.first-1;
 		tmp.second=position.second;
-		find(start,tmp,matrix,giro);
+		rPath=find(start,tmp,matrix,rings,max);
+		if(rPath>max){
+			max=rPath;
+		}
 	}
+
 	if(matrix[position.first][position.second].U && matrix[position.first][position.second-1].type!=3){
-		giro->sputc('U');
+		//giro->sputc('U');
 		matrix[position.first][position.second-1].type=3;
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second-1;
-		find(start,tmp,matrix,giro);
-	}
+		rPath=find(start,tmp,matrix,rings,max);
+		if(rPath>max){
+			max=rPath;
+		}	
+		}
+	return max;
 }
