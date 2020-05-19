@@ -3,3 +3,4 @@ main
 *.exe
 *.o
 build
+.vscode
