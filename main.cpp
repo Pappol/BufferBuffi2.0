@@ -15,7 +15,7 @@ typedef struct{
 	short type = 0; // 0=vuota,1=bianca, 2=nera, 3=gia passata
 } cell;
 
-int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max);
+int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max, int BW);
 
 int main(int argc, char **argv){
 
@@ -74,14 +74,14 @@ int main(int argc, char **argv){
 		cout << endl;
 	}
 
-	int res=find(start, start, matrix, rings, 0);
+	int res=find(start, start, matrix, rings, 0,B+W);
 	cout << res;
 	return 0;
 }
 
-int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
+int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max, int BW){
 	int rPath;
-	if(position==start && rings>1){
+	if(position==start && rings>BW){
 		return rings;
 	}
 	if(position!=start){
@@ -95,7 +95,8 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second+1;
-		rPath=find(start,tmp,matrix,rings,max);
+		rPath=find(start,tmp,matrix,rings,max,BW);
+
 		if(rPath>max){
 			max=rPath;
 		}
@@ -106,7 +107,7 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second+1;
-		rPath=find(start,tmp,matrix,rings,max);
+		rPath=find(start,tmp,matrix,rings,max,BW);
 		if(rPath>max){
 			max=rPath;
 		}	
@@ -117,7 +118,7 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second-1;
-		rPath=find(start,tmp,matrix,rings,max);
+		rPath=find(start,tmp,matrix,rings,max,BW);
 		if(rPath>max){
 			max=rPath;
 		}
@@ -129,10 +130,9 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 		rc tmp;
 		tmp.first=position.first-1;
 		tmp.second=position.second;
-		rPath=find(start,tmp,matrix,rings,max);
+		rPath=find(start,tmp,matrix,rings,max, BW);
 		if(rPath>max){
 			max=rPath;
 		}	
 	}
-	return rings;
 }
