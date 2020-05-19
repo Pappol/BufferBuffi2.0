@@ -9,13 +9,16 @@ int punti = 0;
 // Pair: row and column
 typedef pair<ushort, ushort> rc;
 
+//tipo di cella
+typedef enum {VUOTO, BIANCO, NERO} tipo;
+
 // Cell data structure
 typedef struct {
   bool U = true;  // Can go up from here
   bool D = true;  // Can go down from here
   bool L = true;  // Can go left from here
   bool R = true;  // Can go right from here
-  short type = 0; // 0=vuota,1=bianca, 2=nera
+  short type = VUOTO; // 0=vuota,1=bianca, 2=nera
 } cell;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
@@ -25,8 +28,6 @@ string checkForRectangles(int n, int m, int w, int b, vector<vector<cell>> matri
 string RecTl(rc TL, int n, int m, int w, int b, vector<vector<cell>> matrix);
 int points(int A, int B, int W, rc start, rc end);
 void printResults(int n_anelli, int len, int x_start, int y_start, string perc);
-
-
 bool equals(rc a, rc b);
 
 int main(int argc, char **argv) {
@@ -125,171 +126,186 @@ string checkForRectangles(int n, int m, int w, int b, vector<vector<cell>> matri
 }
 
 string RecTl(rc TL, int n, int m, int w, int b, vector<vector<cell>> matrix){
-  stringbuf percorso;
-  string ret = " ";
-  int n_anelli = 0, i, j;
-  rc start;
-  bool can_turn = false;
+    stringbuf percorso;
+    int n_anelli = 0, i, j;
+    rc start;
 
-  n_anelli++;
-  start.first = TL.first;
-  start.second = TL.second;
-  
-  cout<<endl; 
-  cout<<"> "<<TL.first<<" "<<TL.second<<" (start)"<<endl;
+    n_anelli++;
 
-  i = TL.first;
-  for(int j=TL.second+1; j<n; j++){
-    percorso.sputc('R');
-    //cout<<'R' ;
-    //se trovo un nero o nella cella sotto trovo un bianco
-    if(matrix[i][j].type == 2 || matrix[i+1][j].type == 1){    
-      n_anelli++;
-      //se ho trovato un bianco controllo se nella riga ci sono altri anelli
-      if(matrix[i+1][j].type == 1){
-        int k = j+1;
-        while(matrix[i][k].type == 0 && k != n){
-          k++;
-        }
-        if(k >= n) can_turn = true;
-      } else 
-        can_turn = true;
-      if(can_turn == true){
-        cout<<">> "<<i<<" "<<j<<endl;
-        TL.first = i;
-        TL.second = j;
-        break;
-      }
-    } else if (matrix[i][j].type == 1 && matrix[i][j-1].type != 2){
-        int k = j+1;
-          while(matrix[i][k].type == 0 && k != n){
-            k++;
-          }
-        if(k >= n){
-          TL.first = i;
-          TL.second = j+1;
-          n_anelli++;
-          if(matrix[TL.first][TL.second].type == 2) n_anelli++;
-          cout<<">>> "<<i<<" "<<j<<endl;
-          break;
-        }
-    }
-  }
+    //memorizzo la posizione di partenza
+    start.first = TL.first;
+    start.second = TL.second;
 
-  can_turn = false;
-  j = TL.second;
-  for(int i=TL.first+1; i<m; i++){
-    percorso.sputc('D');
-    //cout<<'D' ;
-    if(matrix[i][j].type == 2 || matrix[i][j-1].type == 1){
-      //se ho trovato un bianco controllo se nella colonna ci sono altri anelli
-      if(matrix[i][j-1].type == 1){
-        int k = i+1;
-        while(matrix[k][j].type == 0 && k != m){
-          k++;
+    //SX ---> DX (i fisso, j cambia)
+    i = TL.first;
+    for(j=TL.second+1; j<n; j++){
+        if(matrix[i][j].type == NERO){//nero
+            n_anelli++;
+            percorso.sputc('D');
+            TL.first = i+1;
+            TL.second = j;
+            break;
         }
-        if(k >= m) can_turn = true;
-      } else 
-        can_turn = true;
-      if(can_turn == true){
-        n_anelli++;
-        TL.first = i;
-        TL.second = j;
-        cout<<">> "<<i<<" "<<j<<endl;
-        break;
-      }
-    } else if (matrix[i][j].type == 1){
-        n_anelli++;
-        TL.first = i+1;
-        TL.second = j;
-        if(matrix[TL.first][TL.second].type == 2) n_anelli++;
-        cout<<"> "<<i<<" "<<j<<endl;
-        break;
-    }
-  }
+        if(matrix[i][j].type == BIANCO){//bianco
+            n_anelli++;
+            percorso.sputc('R');
+            if(matrix[i][j+1].type == NERO){//il prossimo è nero
+                n_anelli++;
+                percorso.sputc('D');
+                TL.first = i+1;
+                TL.second = j+1;
+                break;
+            }
+            int k = j+1;
+            //controllo se ci sono alti anelli nella riga
+            while(matrix[i][k].type == VUOTO && k != n){
+                k++;
+            }
+            if(k >= n){
+                percorso.sputc('D');
+                TL.first = i+1;
+                TL.second = j+1;
+                break;
+            }
+        }
+        if(matrix[i+1][j].type == BIANCO){//bianco una cella sotto
+            int k = j+1;
+            //controllo se ci sono alti anelli nella riga
+            while(matrix[i][k].type == VUOTO && k != n){
+                k++;
+            }
+            if(k >= n){
+                percorso.sputc('D');
+                TL.first = i+1;
+                TL.second = j;
+                break;
+            }
 
-  can_turn = false;
-  i = TL.first;
-  for(int j=TL.second-1; j>=0; j--){
-    percorso.sputc('L');
-    //cout<<'L' ;
-    if(matrix[i][j].type == 2 || matrix[i-1][j].type == 1){
-      //se ho trovato un bianco controllo se nella riga ci sono altri anelli
-      if(matrix[i-1][j].type == 1){
-        int k = j-1;
-        while(matrix[i][k].type == 0 && k != 0){
-          k--;
         }
-        if(k <= 0) can_turn = true;
-      } else 
-        can_turn = true;
-      if(can_turn == true && matrix[i][j].type != 1){
-        n_anelli++;
-        TL.first = i;
-        TL.second = j;
-        cout<<">> "<<i<<" "<<j<<endl;
-        break;
-      }
-    } 
-    if (matrix[i][j].type == 1){
-        n_anelli++;
-        TL.first = i;
-        TL.second = j-1;
-        if(matrix[TL.first][TL.second].type == 2) n_anelli++;
-        cout<<"> "<<i<<" "<<j<<endl;
-        break;
+        percorso.sputc('R');
     }
-    if (j == start.second){
-        TL.first = i;
-        TL.second = j;
-        break;
-    }
-  }
 
-  can_turn = false;
-  j = TL.second;
-  cout<<">< "<<TL.first<<" "<<j<<endl;
-  for(int i=TL.first-1; i>=0; i--){
-    percorso.sputc('U');
-    //cout<<'U' ;
-    if(matrix[i][j].type == 2 || matrix[i][j+1].type == 1){
-      //se ho trovato un bianco controllo se nella colonna ci sono altri anelli
-      if(matrix[i][j+1].type == 1 && matrix[i][j].type != 2){
-        int k = i-1;
-        while(matrix[k][j].type == 0 && k != m){
-          k--;
+    //UP ---> DOWN (i cambia, j fisso)
+    j = TL.second;
+    for(int i=TL.first; i<m; i++){
+        if(matrix[i][j].type == NERO){//nero
+            n_anelli++;
+            percorso.sputc('L');
+            TL.first = i;
+            TL.second = j-1;
+            break;
         }
-        if(k <= 0) can_turn = true;
-      } else 
-        can_turn = true;
-      if(can_turn == true){
-        n_anelli++;
-        TL.first = i;
-        TL.second = j;
-        cout<<">> "<<i<<" "<<j<<endl;
-        break;
-      }
-    } else if (matrix[i][j].type == 1){
-        n_anelli++;
-        TL.first = i-1;
-        TL.second = j;
-        if(matrix[TL.first][TL.second].type == 2) n_anelli++;
-        cout<<"> "<<i<<" "<<j<<endl;
-        break;
-    } else if(equals(TL, start)){
-        TL.first = i;
-        TL.second = j;
-        break;
+        if(matrix[i][j].type == BIANCO){//bianco
+            n_anelli++;
+            percorso.sputc('D');
+            if(matrix[i+1][j].type == NERO){//il prossimo è nero
+                n_anelli++;
+                percorso.sputc('L');
+                TL.first = i+1;
+                TL.second = j-1;
+                break;
+            }
+            int k = i+1;
+            //controllo se ci sono alti anelli nella riga
+            while(matrix[i][k].type == VUOTO && k != m){
+                k++;
+            }
+            if(k >= m){
+                percorso.sputc('L');
+                TL.first = i+1;
+                TL.second = j-1;
+                break;
+            }
+        }
+        if(matrix[i][j-1].type == BIANCO){//bianco una cella a SX
+            int k = i+1;
+            //controllo se ci sono alti anelli nella riga
+            while(matrix[i][k].type == VUOTO && k != m){
+                k++;
+            }
+            if(k >= m){
+                percorso.sputc('L');
+                TL.first = i;
+                TL.second = j-1;
+                break;
+            }
+        }
+        percorso.sputc('D');
     }
-  }
-  cout<<" n anelli : "<<n_anelli<<endl;
-  cout<<" len  : "<<percorso.str().length()<<endl;
-  if(!equals(start, TL)) 
-    return ret;
-  else {
-    ret = percorso.str();
-    return ret;
-  }
+
+    //DX ---> SX (i fisso, j cambia)
+    i = TL.first;
+    for(j=TL.second; j>=0; j--){
+        if(matrix[i][j].type == NERO){//nero
+            n_anelli++;
+            percorso.sputc('U');
+            TL.first = i-1;
+            TL.second = j;
+            break;
+        }
+        if(matrix[i][j].type == BIANCO){//bianco
+            n_anelli++;
+            percorso.sputc('L');
+            if(matrix[i][j+1].type == NERO){ //il prossimo è nero
+                n_anelli++;
+                percorso.sputc('U');
+                TL.first = i-1;
+                TL.second = j-1;
+                break;
+            }
+            int k = j-1;
+            //controllo se ci sono alti anelli nella riga
+            while(matrix[i][k].type == VUOTO && k != 0){
+                k--;
+            }
+            if(k <= 0){
+                percorso.sputc('U');
+                TL.first = i-1;
+                TL.second = j-1;
+                break;
+            }
+        }
+        if(matrix[i+1][j].type == BIANCO){//bianco una cella sopra
+            int k = j-1;
+            //controllo se ci sono alti anelli nella riga
+            while(matrix[i][k].type == VUOTO && k != 0){
+                k--;
+            }
+            if(k <= 0){
+                percorso.sputc('U');
+                TL.first = i-1;
+                TL.second = j;
+                break;
+            }
+
+        }
+        if(j == start.second){ //controllo se mi trovo sotto (qualsiasi altezza) alla partenza
+            percorso.sputc('U');
+            TL.first = i-1;
+            TL.second = j;
+            break;
+        }
+        percorso.sputc('L');
+    }
+
+    //DOWN ---> UP (i cambia, j fisso)
+    j = TL.second;
+    for(int i=TL.first; i>=0; i--){
+        TL.first = i;
+        TL.second = j;
+        if(equals(TL, start)){ //controllo se sono arrivato dove ero partito
+            break;
+        } 
+        percorso.sputc('U');
+    }
+
+    cout<<"percorso: "<<percorso.str()<<endl;
+    cout<<"anelli attraversati: "<<n_anelli<<endl;
+    cout<<"lunghezza percorso: "<<percorso.str().length()<<endl;
+
+    if(equals(TL, start))
+        return percorso.str();
+    return " ";
 }
 
 int points(int A, int B, int W, rc start, rc end){
