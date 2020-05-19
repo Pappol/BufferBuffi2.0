@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 #include <fstream>
+#include <cstdlib>
+#include <vector>
 
 using namespace std;
 //git testing
@@ -60,11 +62,13 @@ int main(int argc, char **argv) {
     whites[i] = rc(r, c);
     matrix[r][c].type = 1;
   }
+
+  ofstream out("output.txt");
+
   // Checking if a rectangle could be the optimal solution
   if (whites.size() <= 8 && blacks.size() <= 4) {
-    checkForRectangles(N, M, whites, blacks, matrix);
+    out << checkForRectangles(N, M, whites, blacks, matrix);
   }
-  ofstream out("output.txt");
 
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
@@ -95,7 +99,7 @@ string checkForRectangles(int n, int m, vector<rc> w, vector<rc> b, vector<vecto
           if(tmp!=" "){
             return tmp;            
           }
-      } else if (matrix[i][j].type == 2){
+      } else if (matrix[i][j].type == 1){
         //codice x bianco
         if(i>0){
           TL.first=i-1;
@@ -116,7 +120,7 @@ string checkForRectangles(int n, int m, vector<rc> w, vector<rc> b, vector<vecto
       }
     }
   }
-
+  return "someting wrong!";
 }
 
 string RecTl(rc TL, int n, int m, vector<rc> w, vector<rc> b, vector<vector<cell>> matrix){
@@ -129,9 +133,12 @@ string RecTl(rc TL, int n, int m, vector<rc> w, vector<rc> b, vector<vector<cell
   start.first = TL.first;
   start.second = TL.second;
   
+  cout<<endl;
+
   i = TL.first;
-  for(int j=TL.second; j<n; j++){
+  for(int j=TL.second+1; j<n; j++){
     percorso.sputc('R');
+    cout<<'R' ;
     if(matrix[i][j].type == 2 || matrix[i+1][j].type == 1){
       n_anelli++;
       TL.first = i;
@@ -146,8 +153,9 @@ string RecTl(rc TL, int n, int m, vector<rc> w, vector<rc> b, vector<vector<cell
   }
 
   j = TL.second;
-  for(int i=TL.first; i<m; i++){
+  for(int i=TL.first+1; i<m; i++){
     percorso.sputc('D');
+    cout<<'D' ;
     if(matrix[i][j].type == 2 || matrix[i][j-1].type == 1){
       n_anelli++;
       TL.first = i;
@@ -162,8 +170,9 @@ string RecTl(rc TL, int n, int m, vector<rc> w, vector<rc> b, vector<vector<cell
   }
 
   i = TL.first;
-  for(int j=TL.second; j>=0; j--){
+  for(int j=TL.second-1; j>=0; j--){
     percorso.sputc('L');
+    cout<<'L' ;
     if(matrix[i][j].type == 2 || matrix[i-1][j].type == 1){
       n_anelli++;
       TL.first = i;
@@ -174,12 +183,17 @@ string RecTl(rc TL, int n, int m, vector<rc> w, vector<rc> b, vector<vector<cell
         TL.first = i;
         TL.second = j-1;
         break;
+    } else if (TL.second == start.second){
+        TL.first = i;
+        TL.second = j;
+        break;
     }
   }
 
   j = TL.second;
-  for(int i=TL.first; i>=0; i--){
+  for(int i=TL.first-1; i>=0; i--){
     percorso.sputc('U');
+    cout<<'U' ;
     if(matrix[i][j].type == 2 || matrix[i][j+1].type == 1){
       n_anelli++;
       TL.first = i;
@@ -190,15 +204,19 @@ string RecTl(rc TL, int n, int m, vector<rc> w, vector<rc> b, vector<vector<cell
         TL.first = i-1;
         TL.second = j;
         break;
+    } else if(equals(TL, start)){
+        TL.first = i;
+        TL.second = j;
+        break;
     }
   }
-
-  if(!equals(start, TL)) return ret;
+  cout<<endl;
+  if(!equals(start, TL)) 
+    return ret;
   else {
     ret = percorso.str();
     return ret;
   }
-
 }
 
 int points(int A, int B, int W, rc start, rc end){
@@ -209,4 +227,5 @@ int points(int A, int B, int W, rc start, rc end){
     tmp_point = 5*(A/(B+W))*0.5;
   }
   punti = max(punti, tmp_point);
+  return punti;
 }
