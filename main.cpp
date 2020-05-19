@@ -2,7 +2,7 @@
 #include <fstream>
 
 using namespace std;
-
+//git testing
 // Pair: row and column
 typedef pair<ushort, ushort> rc;
 
