@@ -19,24 +19,24 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max);
 
 int main(int argc, char **argv){
 
-	ushort N, M;
+	ushort M, N;
 	int B, W;
 	ifstream in("input.txt");
 	// Initialization
-	in >> N >> M >> B >> W;
-	vector<vector<cell>> matrix(M, vector<cell>(N, cell()));
+	in >> M >> N >> B >> W;
+	vector<vector<cell>> matrix(N, vector<cell>(M, cell()));
 
 
 	// Forbidding invalid moves
-	for (int i = 0; i < N; i++){
+	for (int i = 0; i < M; i++){
 		matrix[0][i].U = false;
 	}
-	for (int i = 0; i < M; i++){
-		matrix[i][0].L = false;
-		matrix[i][N - 1].R = false;
-	}
 	for (int i = 0; i < N; i++){
-		matrix[M - 1][i].D = false;
+		matrix[i][0].L = false;
+		matrix[i][M - 1].R = false;
+	}
+	for (int i = 0; i < M; i++){
+		matrix[N - 1][i].D = false;
 	}
 
 
@@ -67,46 +67,40 @@ int main(int argc, char **argv){
 
 	ofstream out("output.txt");
 
-	for (int i = 0; i < M; i++){
-		for (int j = 0; j < N; j++){
+	for (int i = 0; i < N; i++){
+		for (int j = 0; j < M; j++){
 			cout << matrix[i][j].type << " ";
 		}
 		cout << endl;
 	}
-	cout<< "ciao" <<endl;
 
-	//int res=find(start, start, matrix, rings, 0);
+	int res=find(start, start, matrix, rings, 0);
+	cout << res;
 	return 0;
 }
 
 int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 	int rPath;
-	cout << 1;
 	if(position==start && rings>1){
 		return rings;
-		cout << 1;
 	}
 	if(position!=start){
 		if(matrix[position.first][position.second].type==1 || matrix[position.first][position.second].type==2){
 			rings++;
 		}
 	}
-	if(matrix[position.first][position.second].R && matrix[position.first+1][position.second].type!=3){
-		cout << 1;
+	if(matrix[position.first][position.second].R && matrix[position.first][position.second+1].type!=3){
 		//giro->sputc('R');
-		matrix[position.first+1][position.second].type=3;
+		matrix[position.first][position.second+1].type=3;
 		rc tmp;
-		tmp.first=position.first+1;
-		tmp.second=position.second;
+		tmp.first=position.first;
+		tmp.second=position.second+1;
 		rPath=find(start,tmp,matrix,rings,max);
 		if(rPath>max){
 			max=rPath;
 		}
 	}
-
-
 	if(matrix[position.first][position.second].D && matrix[position.first][position.second+1].type!=3){
-		cout << 1;
 		//giro->sputc('D');
 		matrix[position.first][position.second+1].type=3;
 		rc tmp;
@@ -117,22 +111,8 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 			max=rPath;
 		}	
 	}
-
-	if(matrix[position.first][position.second].L && matrix[position.first-1][position.second].type!=3){
-		cout << 1;
+	if(matrix[position.first][position.second].L && matrix[position.first][position.second-1].type!=3){
 		//giro->sputc('L');
-		matrix[position.first-1][position.second].type=3;
-		rc tmp;
-		tmp.first=position.first-1;
-		tmp.second=position.second;
-		rPath=find(start,tmp,matrix,rings,max);
-		if(rPath>max){
-			max=rPath;
-		}
-	}
-
-	if(matrix[position.first][position.second].U && matrix[position.first][position.second-1].type!=3){
-		//giro->sputc('U');
 		matrix[position.first][position.second-1].type=3;
 		rc tmp;
 		tmp.first=position.first;
@@ -140,7 +120,19 @@ int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max){
 		rPath=find(start,tmp,matrix,rings,max);
 		if(rPath>max){
 			max=rPath;
-		}	
 		}
-	return max;
+	}
+
+	if(matrix[position.first][position.second].U && matrix[position.first-1][position.second].type!=3){
+		//giro->sputc('U');
+		matrix[position.first-1][position.second].type=3;
+		rc tmp;
+		tmp.first=position.first-1;
+		tmp.second=position.second;
+		rPath=find(start,tmp,matrix,rings,max);
+		if(rPath>max){
+			max=rPath;
+		}	
+	}
+	return rings;
 }
