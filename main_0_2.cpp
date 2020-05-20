@@ -14,7 +14,7 @@ typedef enum {VUOTO, BIANCO, NERO} tipo;
 
 // Cell data structure
 typedef struct {
-  bool U = true;  // Can go up from here
+  bool U = true;  // Can go vert from here
   bool D = true;  // Can go down from here
   bool L = true;  // Can go left from here
   bool R = true;  // Can go right from here
@@ -24,11 +24,12 @@ typedef struct {
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
 // gets printed anyway.
-string checkForRectangles(int n, int m, int w, int b, vector<vector<cell>> matrix);
-string RecTl(int n, int m, int w, int b, vector<vector<cell>> matrix);
+
+string findRect(int n, int m, vector<vector<cell>> matrix, rc *start);
 int points(int A, int B, int W, rc start, rc end);
 void printResults(int n_anelli, int len, int x_start, int y_start, string perc);
 bool equals(rc a, rc b);
+int contaAnelli(string percorso, int x_start, int y_start, vector<vector<cell>> matrix);
 
 int main(int argc, char **argv) {
   ushort N, M;
@@ -64,10 +65,10 @@ int main(int argc, char **argv) {
     whites[i] = rc(r, c);
     matrix[r][c].type = 1;
   }
-
+    rc start; 
   // Checking if a rectangle could be the optimal solution
   if (whites.size() <= 8 && blacks.size() <= 4) {
-    RecTl(N, M, W, B, matrix);
+    findRect(N, M, matrix, &start);
   }
 
   /*for (int i = 0; i < M; i++) {
@@ -85,11 +86,9 @@ bool equals(rc a, rc b){
   return false;
 }
 
-
-
-
-string RecTl(int n, int m, int w, int b, vector<vector<cell>> matrix){
+string findRect(int n, int m, vector<vector<cell>> matrix,rc *start){
     int T, B, L, R;
+    string ret;
     //cerco il top
     for(int i=0; i<m; i++){
         for(int j=0; j<n; j++){
@@ -145,31 +144,83 @@ string RecTl(int n, int m, int w, int b, vector<vector<cell>> matrix){
         //cout<<endl;
     }
 
-    if(T == B && R == L){
-        if(matrix[T][R].type == BIANCO) return "RRDLLU";
-        if(matrix[T][R].type == NERO) return "RDLU";
+    start->first = T;
+    start->second = min(R,L); 
+
+    int orizz = max(L,R)-min(L,R),
+        vert = max(T,B)-min(B,T);
+    stringbuf percorso=stringbuf();
+
+    if(T == B && R == L){//1 anello
+        if(matrix[T][R].type == BIANCO) ret =  "RRDLLU";
+        if(matrix[T][R].type == NERO) ret =  "RDLU";
     }
 
-    stringbuf percorso;
-    int side = max(L,R)-min(L,R),
-        up = max(T,B)-min(B,T);
+    if(T == B){//2 anelli orizzontali
+        int extra = 0;
+        bool bordo = false;
+        if(matrix[T][L].D == false) bordo = true;
+        if(matrix[T][L].type == BIANCO) extra++;
+        if(matrix[B][R].type == BIANCO) extra++;
 
-    for(int i=0; i<side; i++){
+        for(int i=0; i<orizz+extra; i++){
+            percorso.sputc('R');
+        }
+        if(!bordo)
+            percorso.sputc('D');
+        else
+            percorso.sputc('U');
+        for(int i=0; i<orizz+extra; i++){
+            percorso.sputc('L');
+        }
+        if(!bordo)
+            percorso.sputc('U');
+        else
+            percorso.sputc('D');
+        ret =  percorso.str();
+    }
+
+
+    if(R == L){//2 anelli verticali
+        int extra = 0;
+        bool bordo = false;
+        if(matrix[T][L].R == false) bordo = true;
+        if(matrix[T][L].type == BIANCO) extra++;
+        if(matrix[B][R].type == BIANCO) extra++;
+        if(!bordo)
+            percorso.sputc('R');
+        else
+            percorso.sputc('L');
+        for(int i=0; i<vert+extra; i++){
+            percorso.sputc('D');
+        }
+        if(!bordo)
+            percorso.sputc('L');
+        else
+            percorso.sputc('R');
+        for(int i=0; i<vert+extra; i++){
+            percorso.sputc('U');
+        }      
+        ret =  percorso.str();
+    }
+
+    for(int i=0; i<orizz; i++){
         percorso.sputc('R');
     }
-    for(int i=0; i<up; i++){
+    for(int i=0; i<vert; i++){
         percorso.sputc('D');
     }
-    for(int i=0; i<side; i++){
+    for(int i=0; i<orizz; i++){
         percorso.sputc('L');
     }
-    for(int i=0; i<up; i++){
+    for(int i=0; i<vert; i++){
         percorso.sputc('U');
     }
-
+    int anell = contaAnelli(ret, T, min(R,L), matrix);
+    printResults(anell, ret.length(), T, min(R,L), ret);
     cout<<percorso.str()<<endl;
-    return percorso.str();
-
+    ret =  percorso.str();
+    return ret;
 }
 
 int points(int A, int B, int W, rc start, rc end){
@@ -187,4 +238,23 @@ void printResults(int n_anelli, int len, int x_start, int y_start, string perc){
   ofstream out("output.txt");
   out << n_anelli<<" " << len<<" " << x_start<<" " << y_start <<" "<< perc << "#"<<endl;
   out.close();
+}
+
+int contaAnelli(string percorso, int x_start, int y_start, vector<vector<cell>> matrix){
+    int n_anelli = 0;
+    for(int i=0; i<percorso.length(); i++){
+        if(matrix[x_start][y_start].type != VUOTO) n_anelli++;
+        switch(percorso[i]){
+            case 'R' : y_start++;
+                break;
+            case 'D' : x_start++;
+                break;
+            case 'L' : y_start--;
+                break;
+            case 'U' : x_start--;
+                break;
+        }
+    }
+    cout<<"anelli: "<<n_anelli<<endl;
+    return n_anelli;
 }
