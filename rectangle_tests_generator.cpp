@@ -10,6 +10,7 @@ int main() {
   ofstream inputFile(folder + "/r_" + to_string(seed) + ".txt");
   ofstream outFile(folder + "/r_sol_" + to_string(seed) + ".txt");
   int dim = rand() % 256;
+  dim = 80;
   int m = rand() % (dim - 2) + 2;
   int n = rand() % (dim - 2) + 2;
   int blacks = rand() % 5;
