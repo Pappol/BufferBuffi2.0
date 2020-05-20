@@ -37,18 +37,17 @@ int main(int argc, char **argv) {
   ifstream in("input.txt");
   // Initialization
   in >> N >> M >> B >> W;
-  swap(N, M);
-  vector<vector<cell>> matrix(M, vector<cell>(N, cell()));
+  vector<vector<cell>> matrix(N, vector<cell>(M, cell()));
   // Forbidding invalid moves
-  for (int i = 0; i < N; i++) {
-    matrix[0][i].U = false;
+  for (int j = 0; j< M; j++) {
+    matrix[0][j].U = false;
   }
-  for (int i = 0; i < M; i++) {
+  for (int i = 0; i < N; i++) {
     matrix[i][0].L = false;
-    matrix[i][N - 1].R = false;
+    matrix[i][M - 1].R = false;
   }
-  for (int i = 0; i < N; i++) {
-    matrix[M - 1][i].D = false;
+  for (int j = 0; j < M; j++) {
+    matrix[N - 1][j].D = false;
   }
   // Getting rings' poitions
   vector<rc> blacks = vector<rc>(B);
@@ -71,8 +70,8 @@ int main(int argc, char **argv) {
     findRect(N, M, matrix, &start);
   }
 
-  /*for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N; j++) {
+  /*for (int i = 0; i < N; i++) {
+    for (int j = 0; j < M; j++) {
       if(matrix[i][j].type == 0) cout << "-"<< " ";
       else cout << matrix[i][j].type << " ";
     }
@@ -90,55 +89,58 @@ string findRect(int n, int m, vector<vector<cell>> matrix,rc *start){
     int T, B, L, R;
     string ret;
     //cerco il top
-    for(int i=0; i<m; i++){
-        for(int j=0; j<n; j++){
+    for(int i=0; i<n; i++){
+        for(int j=0; j<m; j++){
             //cout<<i<<" ";
             if(matrix[i][j].type != VUOTO){
                 T = i;
-                cout<<"TOP =  "<<T<<endl;
-                i = m;
-                j = n;
-                break;
+                //cout<<"TOP =  "<<T<<endl;
+                i = n;
+                j = m;
+                //break;
             }
         }
         //cout<<endl;
     }
     //cerco il bottom
-    for(int i=m-1; i>=0; i--){
-        for(int j=n-1; j>=0; j--){
+    for(int i=n-1; i>=0; i--){
+        for(int j=m-1; j>=0; j--){
             //cout<<i<<" ";
             if(matrix[i][j].type != VUOTO){
                 B = i;
                 i = -1;
                 j = -1;
-                cout<<"BOT =  "<<B<<endl;
+                //cout<<"BOT =  "<<B<<endl;
+                //break;
             }
         }
-        //cout<<endl;
+       // cout<<endl;
     }
-    swap(n,m);
+    
     //cerco il left
-    for(int j=0; j<n; j++){
-        for(int i=0; i<m; i++){
+    for(int j=0; j<m; j++){
+        for(int i=T; i<B; i++){
             //cout<<i<<" ";
-            if(matrix[j][i].type != VUOTO){
-                L = i;
-                i = m;
-                j = n;
-                cout<<"LEFT =  "<<L<<endl;
+            if(matrix[i][j].type != VUOTO){
+                L = j;
+                i = B;
+                j = m;
+                //cout<<"LEFT =  "<<L<<endl;
+                //break;
             }
         }
         //cout<<endl;
     }
     //cerco il bottom
-    for(int j=n-1; j>=0; j--){
-        for(int i=m-1; i>=0; i--){
+    for(int j=m-1; j>=0; j--){
+        for(int i=B; i>=T; i--){
             //cout<<i<<" ";
-            if(matrix[j][i].type != VUOTO){
-                R = i;
-                i = 0;
-                j = 0;
-                cout<<"RIGHT =  "<<R<<endl;
+            if(matrix[i][j].type != VUOTO){
+                R = j;
+                i = -1;
+                j = -1;
+                //cout<<"RIGHT =  "<<R<<endl;
+                //break;
             }
         }
         //cout<<endl;
@@ -203,23 +205,26 @@ string findRect(int n, int m, vector<vector<cell>> matrix,rc *start){
         }      
         ret =  percorso.str();
     }
+    if(T != B && R != L){
+        for(int i=0; i<orizz; i++){
+            percorso.sputc('R');
+        }
+        for(int i=0; i<vert; i++){
+            percorso.sputc('D');
+        }
+        for(int i=0; i<orizz; i++){
+            percorso.sputc('L');
+        }
+        for(int i=0; i<vert; i++){
+            percorso.sputc('U');
+        }
+    }
 
-    for(int i=0; i<orizz; i++){
-        percorso.sputc('R');
-    }
-    for(int i=0; i<vert; i++){
-        percorso.sputc('D');
-    }
-    for(int i=0; i<orizz; i++){
-        percorso.sputc('L');
-    }
-    for(int i=0; i<vert; i++){
-        percorso.sputc('U');
-    }
+    ret =  percorso.str();
     int anell = contaAnelli(ret, T, min(R,L), matrix);
     printResults(anell, ret.length(), T, min(R,L), ret);
-    cout<<percorso.str()<<endl;
-    ret =  percorso.str();
+    //cout<<percorso.str()<<endl;
+    
     return ret;
 }
 
@@ -236,11 +241,13 @@ int points(int A, int B, int W, rc start, rc end){
 
 void printResults(int n_anelli, int len, int x_start, int y_start, string perc){
   ofstream out("output.txt");
+  //cout << n_anelli<<" " << len<<" " << x_start<<" " << y_start <<" "<< perc << "#"<<endl;
   out << n_anelli<<" " << len<<" " << x_start<<" " << y_start <<" "<< perc << "#"<<endl;
   out.close();
 }
 
 int contaAnelli(string percorso, int x_start, int y_start, vector<vector<cell>> matrix){
+    
     int n_anelli = 0;
     for(int i=0; i<percorso.length(); i++){
         if(matrix[x_start][y_start].type != VUOTO) n_anelli++;
@@ -255,6 +262,6 @@ int contaAnelli(string percorso, int x_start, int y_start, vector<vector<cell>> 
                 break;
         }
     }
-    cout<<"anelli: "<<n_anelli<<endl;
+    //cout<<"anelli: "<<n_anelli<<endl;
     return n_anelli;
 }
