@@ -13,6 +13,7 @@ typedef struct {
   bool R = true;  // Can go right from here
   short type = 0; // 0=vuota,1=bianca, 2=nera
 } cell;
+vector<vector<cell>> matrix;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -27,7 +28,7 @@ int main(int argc, char **argv) {
   ofstream out("output.txt");
   // Initialization
   in >> N >> M >> B >> W;
-  vector<vector<cell>> matrix(N, vector<cell>(M, cell()));
+  matrix = vector<vector<cell>>(N, vector<cell>(M, cell()));
   // Forbidding invalid moves
   for (int i = 0; i < M; i++) {
     matrix[0][i].U = false;
