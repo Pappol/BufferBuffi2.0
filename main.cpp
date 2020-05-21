@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 #include <fstream>
+#include <stdlib.h>
+#include <time.h>
 #define VUOTO 0
 #define BIANCO 1
 #define NERO 2
@@ -18,6 +20,11 @@ typedef struct {
 } cell;
 vector<vector<cell>> matrix;
 
+//GLOBALS
+ushort N, M;
+int B, W;
+int maxPoint = 0;
+
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
 // gets printed anyway. Returns ring count w/ a rectangular solution.
@@ -27,9 +34,15 @@ int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b, ofstream *out);
 // darkness)
 void placeWalls(int n, int m);
 
+char pickRandom(bool U, bool D, bool R, bool L, char prec);
+rc getNextCell(int x, int y, char dir);
+void bound(int x, int y, char dir);
+char muovi(int x, int y, char precDir);
+string makePath(int start_x, int start_y, ofstream *out);
+
 int main(int argc, char **argv) {
-  ushort N, M;
-  int B, W;
+  srand(time(NULL));
+ 
   ifstream in("input.txt");
   ofstream out("output.txt");
   // Initialization
@@ -69,20 +82,23 @@ int main(int argc, char **argv) {
   // Placing the walls
   placeWalls(N, M);
 
-  out << endl;
+  while(true){
+    makePath(rand()%N, rand()%M, &out);
+  }
+
+  cout << endl;
   for (int i = 0; i < N; i++) {
     for (int j = 0; j < M; j++) {
-      out << matrix[i][j].type;
+      cout << matrix[i][j].type;
     }
-    out << endl;
+    cout << endl;
   }
   out.close();
   in.close();
   return 0;
 }
 
-int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b,
-                       ofstream *out) {
+int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b, ofstream *out) {
   pair<short, short> topLeft, topRight, bottomRight;
   topLeft = topRight = bottomRight = pair<short, short>(-1, -1);
   for (int i = 0; i < n; i++) {
@@ -228,4 +244,159 @@ void placeWalls(int n, int m) {
         }
       }
   // TODO: rosa
+}
+
+char pickRandom(bool U, bool D, bool R, bool L, char prec){
+    //prec: movimento precedente
+    //non posso andare nella direzione opposta di prec altrimenti torno indietro
+    vector<char> direzioniCons = vector<char>();
+    if(U && prec!='D') direzioniCons.push_back('U');
+    if(D && prec!='U') direzioniCons.push_back('D');
+    if(R && prec!='L') direzioniCons.push_back('R');
+    if(L && prec!='R') direzioniCons.push_back('L');
+    if(direzioniCons.size()>0)
+      return direzioniCons[ rand()%direzioniCons.size() ];
+    else
+      return '#';
+}
+
+rc getNextCell(int x, int y, char dir){
+    rc newCell;
+    switch(dir){
+        case 'U': 
+            newCell.first = x-1;
+            newCell.second = y;
+            break;
+        case 'D': 
+            newCell.first = x+1;
+            newCell.second = y;
+            break;
+        case 'R': 
+            newCell.first = x;
+            newCell.second = y+1;
+            break;
+        case 'L': 
+            newCell.first = x;
+            newCell.second = y-1;
+            break;
+    }
+    return newCell;
+}
+
+void bound(int x, int y, char dir){
+    switch(dir){
+        case 'U': 
+            matrix[x][y].U = false;
+            break;
+        case 'D': 
+            matrix[x][y].D = false;
+            break;
+        case 'R': 
+            matrix[x][y].R = false;
+            break;
+        case 'L': 
+            matrix[x][y].L = false;
+            break;
+    }
+}
+
+char muovi(int x, int y, char precDir){
+    char dir = pickRandom( matrix[x][y].U, matrix[x][y].D, matrix[x][y].R, matrix[x][y].L, precDir );
+    if(dir == '#') return dir;
+    //controllo direzione se c'è un anello
+    //serve??? (in teoria no perchè metto già tutti i muri giusti)
+
+    //se la cella corrente è nera metto i muri im base allo spostamento ad "angolo"
+    //se la cella corrente è vuota e la direzione precedente è diversa dalla corrente si comporta da nera
+    if(matrix[x][y].type == 2 || (matrix[x][y].type == 0 && dir != precDir)){
+        if (dir == 'U' && x+1<N) bound(x+1, y, dir);         //se sono andato su metto un muro sotto
+        else if (dir == 'D' && x-1>=0) bound(x-1, y, dir);    //se sono andato giu metto un muro sopra
+        else if (dir == 'R' && y-1>=0) bound(x, y-1, dir);    //se sono andato a dx metto un muro a sx
+        else if (dir == 'L' && y+1<M) bound(x, y+1, dir);    //se sono andato a sx metto un muro a dx
+
+        if(precDir == 'R' && y+1<M) bound(x, y+1, 'L');
+        else if(precDir == 'L' && y-1>=0) bound(x, y-1, 'R');
+        else if(precDir == 'U' && x-1>=0) bound(x-1, y, 'D');
+        else if(precDir == 'D' && x+1<N) bound(x+1, y, 'U');
+    }
+    //se la cella corrente è bianca metto i muri in modo concorde allo spostamento
+    //se la cella corrente è vuota e la direzione precedente è uguale alla corrente si comporta da bianca
+    if(matrix[x][y].type == 2 || (matrix[x][y].type == 0 && dir == precDir)){
+        if(dir == 'U' || dir == 'D'){   //se sono andato a dx o sx metto i muri sopra e sotto
+            if(y-1>=0) bound(x, y-1, 'R');
+            if(y+1<M) bound(x, y+1, 'L');
+        } else{                         //se sono andato su o giu metto i muri a dx e sx
+            if(x-1>=0) bound(x-1, y, 'D');
+            if(x+1<N) bound(x+1, y, 'U');
+        }
+    }
+
+    //MURI IN BASE ALLA CELLA IN CUI MI TROVO DOPO LO SPOSTAMENTO CHE HO FATTO
+    rc nextCell = getNextCell(x, y, dir);  
+    if(matrix[nextCell.first][nextCell.second].type == 2){  //se è nera metto un muro per evitare che la mossa dopo vada dritta
+        bound(nextCell.first, nextCell.second, dir);
+    }
+    if(matrix[nextCell.first][nextCell.second].type == 1){  //se è bianca e mi sono già mosso 2 volte nella stessa direzione metto un muro per evitare che la mossa dopo vada ancora dritta
+        if(dir == 'U' || dir == 'D'){   //se sono arrivato da dx o sx metto i muri sopra e sotto
+            bound(nextCell.first, nextCell.second, 'R');
+            bound(nextCell.first, nextCell.second, 'L');
+        } else{                         //se sono arrivato da su o giu metto i muri a dx e sx
+            bound(nextCell.first, nextCell.second, 'D');
+            bound(nextCell.first, nextCell.second, 'U');
+        }
+        if(dir == precDir){
+            nextCell = getNextCell(nextCell.first, nextCell.second, dir);
+            bound(nextCell.first, nextCell.second, dir);
+        }
+    }
+    
+    //restituisco la direzione che ho preso in modo da passarla come precedenrte al prossimo passaggio
+    return dir; 
+}
+
+string makePath(int start_x, int start_y, ofstream *out){
+  stringbuf percorso;
+  rc cell;
+  cell.first = start_x;
+  cell.second = start_y;
+  char move;
+  bool close = false;
+  int n_anelli = 0;
+  int punti;
+
+  do{
+    if(matrix[cell.first][cell.second].type != 0) n_anelli++;
+    //cout<<"mossa";
+    move = muovi(cell.first, cell.second, move);
+    //cout<<"("<<move<<") - ";
+    //cout<<"nuova cella";
+    cell = getNextCell(cell.first, cell.second, move);
+    //cout<<"("<<cell.first<<" , "<<cell.second<<") - ";
+    if(cell.first==start_x && cell.second==start_y){
+      move='#';
+      close = true;
+      //cout<<" #chiuso# ";
+    }
+    //cout<<"inserimento - ";
+    percorso.sputc(move);
+    //cout<<"new round!"<<endl;
+  }while( move != '#');
+
+  punti = 5*n_anelli/(B+W);
+  if(!close) punti = punti/2;
+  //*out<<punti<<" ---> "<<percorso.str().length();
+  if(maxPoint < punti){
+    *out << n_anelli <<" "<< percorso.str().length()-1 <<" "<< start_x <<" "<< start_y <<" "<<percorso.str()<<endl;
+    cout<<"START: ("<<start_x<<" , "<<start_y<<")"<<endl;
+    cout<<"ANELLI: "<<n_anelli<<endl;
+    cout<<"PUNTI: "<<punti<<endl;
+    cout<<"PERCORSO GENERATO: ";
+    cout<<percorso.str()<<endl<<endl;
+
+  }
+  //*out<<endl;
+
+  maxPoint = max(punti, maxPoint);
+
+  return percorso.str();
 }
