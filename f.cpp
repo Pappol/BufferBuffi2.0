@@ -27,7 +27,7 @@ char pickRandom(bool U, bool D, bool R, bool L, char prec){
     if(D && prec!='U') direzioniCons.push_back('D');
     if(R && prec!='L') direzioniCons.push_back('R');
     if(L && prec!='R') direzioniCons.push_back('L');
-    return direzioniCons[ rand()%(direzioniCons.size()+1) ];
+    return direzioniCons[ rand()%direzioniCons.size() ];
 }
 
 rc getNextCell(int x, int y, char dir){
@@ -101,6 +101,13 @@ char muovi(int x, int y, char precDir){
         bound(nextCell.first, nextCell.second, dir);
     }
     if(matrix[nextCell.first][nextCell.second].type == 1){  //se è bianca e mi sono già mosso 2 volte nella stessa direzione metto un muro per evitare che la mossa dopo vada ancora dritta
+        if(dir == 'U' || dir == 'D'){   //se sono arrivato da dx o sx metto i muri sopra e sotto
+            bound(nextCell.first, nextCell.second, 'R');
+            bound(nextCell.first, nextCell.second, 'L');
+        } else{                         //se sono arrivato da su o giu metto i muri a dx e sx
+            bound(nextCell.first, nextCell.second, 'D');
+            bound(nextCell.first, nextCell.second, 'U');
+        }
         if(dir == precDir){
             nextCell = getNextCell(nextCell.first, nextCell.second, dir);
             bound(nextCell.first, nextCell.second, dir);
