@@ -142,26 +142,47 @@ int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b,
 }
 
 void placeWalls(int n, int m) {
-  for (int j = 0; j < m; j++) // BLUE  TOP
-    if (matrix[0][j].type == BIANCO) {
-      matrix[1][j].U = false;
-      matrix[0][j].D = false;
+  bool addedSomeWalls;
+  int border = 0;
+  do {
+    addedSomeWalls = false;
+    int n1 = n - border;
+    int m1 = m - border;
+    for (int j = border; j < m1; j++) { // BLUE  TOP
+      cell c = matrix[border][j];
+      if (c.type == BIANCO && c.U == false) {
+        matrix[border][j].D = false;
+        matrix[border + 1][j].U = false;
+        addedSomeWalls = true;
+      }
     }
-  for (int i = 0; i < n; i++) // BLUE  RIGHT
-    if (matrix[i][m - 1].type == BIANCO) {
-      matrix[i][m - 1].L = false;
-      matrix[i][m - 2].R = false;
+    for (int i = border; i < n1; i++) { // BLUE  RIGHT
+      cell c = matrix[i][m1 - 1];
+      if (c.type == BIANCO && c.R == false) {
+        matrix[i][m1 - 1].L = false;
+        matrix[i][m1 - 2].R = false;
+        addedSomeWalls = true;
+      }
     }
-  for (int j = 0; j < m; j++) // BLUE  BOTTOM
-    if (matrix[n - 1][j].type == BIANCO) {
-      matrix[n - 1][j].U = false;
-      matrix[n - 2][j].D = false;
+    for (int j = border; j < m1; j++) { // BLUE  BOTTOM
+      cell c = matrix[n1 - 1][j];
+      if (c.type == BIANCO && c.D == false) {
+        matrix[n1 - 1][j].U = false;
+        matrix[n1 - 2][j].D = false;
+        addedSomeWalls = true;
+      }
     }
-  for (int i = 0; i < n; i++) // BLUE LEFT
-    if (matrix[i][0].type == BIANCO) {
-      matrix[i][0].R = false;
-      matrix[i][1].L = false;
+    for (int i = border; i < n1; i++) { // BLUE LEFT
+      cell c = matrix[i][border];
+      if (c.type == BIANCO && c.L == false) {
+        matrix[i][border].R = false;
+        matrix[i][border + 1].L = false;
+        addedSomeWalls = true;
+      }
     }
+    border++;
+  } while (addedSomeWalls);
+
   for (int i = 1; i < n; i++) // GREEN VERTICAL
     for (int j = 0; j < m; j++)
       if (matrix[i][j].type == BIANCO && matrix[i - 1][j].type == BIANCO &&
@@ -169,11 +190,19 @@ void placeWalls(int n, int m) {
         // Laterali (verticali)
         matrix[i][j].L = matrix[i][j].R = false;
         matrix[i - 1][j].L = matrix[i - 1][j].R = false;
+        if (j + 1 < m)
+          matrix[i - 1][j + 1].L = matrix[i][j + 1].L = false;
+        if (j - 1 > 0)
+          matrix[i - 1][j - 1].R = matrix[i][j - 1].R = false;
         if (i - 2 >= 0) {
           matrix[i - 2][j].U = false;
+          if (i - 3 >= 0)
+            matrix[i - 3][j].D = false;
         }
         if (i + 1 < n) {
           matrix[i + 1][j].D = false;
+          if (i + 2 < n)
+            matrix[i + 2][j].U = false;
         }
       }
   for (int j = 1; j < m; j++) // GREEN HORIZONTAL
@@ -183,10 +212,20 @@ void placeWalls(int n, int m) {
         // Laterali (orizzontali)
         matrix[i][j].U = matrix[i][j].D = false;
         matrix[i][j - 1].U = matrix[i][j - 1].D = false;
-        if (j - 2 >= 0)
+        if (i - 1 >= 0)
+          matrix[i - 1][j].D = matrix[i - 1][j - 1].D = false;
+        if (i + 1 < n)
+          matrix[i + 1][j].U = matrix[i + 1][j - 1].U = false;
+        if (j - 2 >= 0) {
           matrix[i][j - 2].L = false;
-        if (j + 1 < m)
+          if (j - 3 >= 0)
+            matrix[i][j - 3].R = false;
+        }
+        if (j + 1 < m) {
           matrix[i][j + 1].R = false;
+          if (j + 2 < m)
+            matrix[i][j + 2].L = false;
+        }
       }
   // TODO: rosa
 }
