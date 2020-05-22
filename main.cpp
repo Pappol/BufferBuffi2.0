@@ -15,7 +15,9 @@ typedef struct{
 	short type = 0; // 0=vuota,1=bianca, 2=nera, 3=gia passata
 } cell;
 
-int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max, int BW);
+int find(rc position,vector<vector<cell>> matrix,int rings, int max, int BW);
+int find2(rc position,vector<vector<cell>> matrix,int rings, int max, int BW, int dir);
+
 
 int main(int argc, char **argv){
 
@@ -74,65 +76,102 @@ int main(int argc, char **argv){
 		cout << endl;
 	}
 
-	int res=find(start, start, matrix, rings, 0,B+W);
+	int res=find(start, matrix, rings, 0,B+W);
 	cout << res;
 	return 0;
 }
 
-int find(rc start,rc position,vector<vector<cell>> matrix,int rings, int max, int BW){
+int find(rc position,vector<vector<cell>> matrix,int rings, int max, int BW){
+	cout<<"find called"<<endl;
+	
 	int rPath;
-	if(position==start && rings>BW){
+	if(rings==BW){
+		cout<<"return Rings"<<endl;
 		return rings;
 	}
-	if(position!=start){
 		if(matrix[position.first][position.second].type==1 || matrix[position.first][position.second].type==2){
+			cout<<"Rings++"<<endl;
 			rings++;
 		}
-	}
+	matrix[position.first][position.second].type=3;
 	if(matrix[position.first][position.second].R && matrix[position.first][position.second+1].type!=3){
 		//giro->sputc('R');
-		matrix[position.first][position.second+1].type=3;
+		cout<<"R"<<endl;
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second+1;
-		rPath=find(start,tmp,matrix,rings,max,BW);
-
+		rPath=find(tmp,matrix,rings,max,BW);
 		if(rPath>max){
 			max=rPath;
 		}
 	}
 	if(matrix[position.first][position.second].D && matrix[position.first][position.second+1].type!=3){
+		cout<<"D"<<endl;
 		//giro->sputc('D');
-		matrix[position.first][position.second+1].type=3;
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second+1;
-		rPath=find(start,tmp,matrix,rings,max,BW);
+		rPath=find(tmp,matrix,rings,max,BW);
 		if(rPath>max){
 			max=rPath;
 		}	
 	}
 	if(matrix[position.first][position.second].L && matrix[position.first][position.second-1].type!=3){
+		cout<<"L"<<endl;
 		//giro->sputc('L');
-		matrix[position.first][position.second-1].type=3;
 		rc tmp;
 		tmp.first=position.first;
 		tmp.second=position.second-1;
-		rPath=find(start,tmp,matrix,rings,max,BW);
+		rPath=find(tmp,matrix,rings,max,BW);
 		if(rPath>max){
 			max=rPath;
 		}
 	}
 
 	if(matrix[position.first][position.second].U && matrix[position.first-1][position.second].type!=3){
+		cout<<"U"<<endl;
 		//giro->sputc('U');
-		matrix[position.first-1][position.second].type=3;
 		rc tmp;
 		tmp.first=position.first-1;
 		tmp.second=position.second;
-		rPath=find(start,tmp,matrix,rings,max, BW);
+		rPath=find(tmp,matrix,rings,max, BW);
 		if(rPath>max){
 			max=rPath;
 		}	
+	}
+	cout<<"Return max"<<endl;
+	return max;
+}
+
+//dir e la direzione del movimento da effettuare
+//1=destra 2=basso 3=sinistra 4=alto
+int find2(rc position,vector<vector<cell>> matrix,int rings, int S[], int BW, int dir, int i){
+
+	S[i]=dir;
+
+	switch (dir){
+	case 1: position.second++; break;
+	case 2: position.first++; break;
+	case 3: position.second--; break;
+	case 4: position.first++; break;
+	}
+
+	if(matrix[position.first][position.second].type==1 || matrix[position.first][position.second].type==2){
+			cout<<"Rings++"<<endl;
+			rings++;
+	}
+
+	if(rings==BW){
+		cout<<"soluzione trovata"<<endl;
+		return rings;
+	}else{
+		//calcola l'insieme delle scelte in funzione di S[1...i-1]
+			switch (dir){
+		case 1: matrix[position.first][position.second].L=false; break;
+		case 2: matrix[position.first][position.second].U=false; break;
+		case 3: matrix[position.first][position.second].R=false; break;
+		case 4: matrix[position.first][position.second].D=false; break;
+	}
+		//itera sull insieme delle scelte
 	}
 }
