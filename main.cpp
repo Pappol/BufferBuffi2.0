@@ -17,44 +17,48 @@ typedef struct {
   short type = 0; // 0=vuota,1=bianca, 2=nera
 } cell;
 vector<vector<cell>> matrix;
+ushort n, m;
+vector<rc> blacks, whites;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
 // gets printed anyway. Returns ring count w/ a rectangular solution.
-int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b, ofstream *out);
+int checkForRectangles(ofstream *out);
 
 // Modifies matrix "placing walls" (forbidding moves that would surely lead into
 // darkness)
-void placeWalls(int n, int m);
+void placeWalls();
+
+// Search for a solution via backtracking
+void solve(ofstream *out);
 
 int main(int argc, char **argv) {
-  ushort N, M;
   int B, W;
   ifstream in("input.txt");
   ofstream out("output.txt");
   // Initialization
-  in >> N >> M >> B >> W;
-  matrix = vector<vector<cell>>(N, vector<cell>(M, cell()));
+  in >> n >> m >> B >> W;
+  matrix = vector<vector<cell>>(n, vector<cell>(m, cell()));
   // Forbidding invalid moves
-  for (int i = 0; i < M; i++) {
+  for (int i = 0; i < m; i++) {
     matrix[0][i].U = false;
   }
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < n; i++) {
     matrix[i][0].L = false;
-    matrix[i][M - 1].R = false;
+    matrix[i][m - 1].R = false;
   }
-  for (int i = 0; i < M; i++) {
-    matrix[N - 1][i].D = false;
+  for (int i = 0; i < m; i++) {
+    matrix[n - 1][i].D = false;
   }
   // Getting rings' poitions
-  vector<rc> blacks = vector<rc>(B);
+  blacks = vector<rc>(B);
   for (int i = 0; i < B; i++) {
     ushort r, c;
     in >> r >> c;
     blacks[i] = rc(r, c);
     matrix[r][c].type = NERO;
   }
-  vector<rc> whites = vector<rc>(W);
+  whites = vector<rc>(W);
   for (int i = 0; i < W; i++) {
     ushort r, c;
     in >> r >> c;
@@ -63,15 +67,15 @@ int main(int argc, char **argv) {
   }
   // Checking if a rectangle could be the optimal solution
   if (W <= 8 && B <= 4) {
-    if (checkForRectangles(N, M, whites, blacks, &out) == B + W)
+    if (checkForRectangles(&out) == B + W)
       return 0;
   }
   // Placing the walls
-  placeWalls(N, M);
+  placeWalls();
 
   out << endl;
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < M; j++) {
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
       out << matrix[i][j].type;
     }
     out << endl;
@@ -81,8 +85,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b,
-                       ofstream *out) {
+int checkForRectangles(ofstream *out) {
   pair<short, short> topLeft, topRight, bottomRight;
   topLeft = topRight = bottomRight = pair<short, short>(-1, -1);
   for (int i = 0; i < n; i++) {
@@ -141,7 +144,7 @@ int checkForRectangles(int n, int m, vector<rc> w, vector<rc> b,
   return anelli;
 }
 
-void placeWalls(int n, int m) {
+void placeWalls() {
   bool addedSomeWalls;
   int border = 0;
   do {
@@ -228,4 +231,122 @@ void placeWalls(int n, int m) {
         }
       }
   // TODO: rosa
+}
+
+// Ritorna il numero di anelli attraversati
+int solveRec(ofstream *out, rc currentPosition, rc arrivo, stringbuf mosse,
+             int anelliAttraversati, char previousMove) {
+  if (previousMove == '\0') {
+    // start up
+    if (solveRec(out, rc(currentPosition.first, currentPosition.second), arrivo,
+                 mosse, anelliAttraversati,
+                 'U') == whites.size() + blacks.size()) {
+    }
+  }
+  if (currentPosition.first == arrivo.first &&
+      currentPosition.second == arrivo.second) {
+    // TODO printsol();
+    return anelliAttraversati;
+  } else {
+    cell c = matrix[currentPosition.first][currentPosition.second];
+    if (c.U) {
+    }
+    if (c.D) {
+    }
+    if (c.L) {
+    }
+    if (c.R) {
+    }
+  }
+}
+
+void solve(ofstream *out) {
+  // for (rc r : blacks) {
+  //   int bianchiVicini = 0;
+  //   if (r.first >= 2 && matrix[r.first - 1][r.second].type == BIANCO &&
+  //       matrix[r.first - 1][r.second].D &&
+  //       (r.first + 1 == n ||
+  //        (r.first + 1 < n &&
+  //         matrix[r.first + 1][r.second].type != BIANCO))) { // bianco sopra
+  //         nero
+  //     if (r.second >= 2 && matrix[r.first][r.second - 1].type == BIANCO &&
+  //         matrix[r.first][r.second - 1].R &&
+  //         ((r.second + 1 < m && matrix[r.first][r.second + 1].type != BIANCO)
+  //         ||
+  //          r.second + 1 == m)) { // secondo bianco a sx
+  //       /*
+  //          w
+  //         wb
+  //       */
+  //       matrix[r.first][r.second - 1].U = false;
+  //       matrix[r.first][r.second - 1].D = false;
+  //       matrix[r.first - 1][r.second].R = false;
+  //       matrix[r.first - 1][r.second].L = false;
+  //       matrix[r.first - 1][r.second - 1].R = false;
+  //       matrix[r.first - 1][r.second - 1].D = false;
+  //       matrix[r.first][r.second].R = false;
+  //       matrix[r.first][r.second].D = false;
+  //       if (r.first - 2 >= 0) {
+  //         matrix[r.first - 2][r.second].U = false;
+  //         if (r.first - 3 >= 0) {
+  //           matrix[r.first - 3][r.second].D = false;
+  //         }
+  //       }
+  //       if (r.second - 2 >= 0) {
+  //         matrix[r.first][r.second - 2].L = false;
+  //         if (r.second - 3 >= 0) {
+  //           matrix[r.first][r.second - 3].R = false;
+  //         }
+  //       }
+  //       if (r.first + 1 < n) {
+  //         matrix[r.first + 1][r.second].U = false;
+  //         matrix[r.first + 1][r.second - 1].U = false;
+  //       }
+  //       if (r.second + 1 < m) {
+  //         matrix[r.first][r.second + 1].L = false;
+  //         matrix[r.first - 1][r.second + 1].L = false;
+  //       }
+  rc r = rc(n / 2, m / 2);
+  solveRec(out, r, r, stringbuf(), 0, '\0');
+  //     } else if (r.second + 2 < m &&
+  //                matrix[r.first][r.second + 1].type == BIANCO &&
+  //                matrix[r.first][r.second + 1].L &&
+  //                ((r.second - 1 >= 0 &&
+  //                  matrix[r.first][r.second - 1].type != BIANCO) ||
+  //                 r.second == 0)) { // secondo bianco a dx
+  //       /* w
+  //          bw
+  //       */
+  //       matrix[r.first][r.second + 1].U = false;
+  //       matrix[r.first][r.second + 1].D = false;
+  //       matrix[r.first - 1][r.second].R = false;
+  //       matrix[r.first - 1][r.second].L = false;
+  //       matrix[r.first - 1][r.second + 1].L = false;
+  //       matrix[r.first - 1][r.second + 1].D = false;
+  //       matrix[r.first][r.second].L = false;
+  //       matrix[r.first][r.second].D = false;
+  //       if (r.first - 2 >= 0) {
+  //         matrix[r.first - 2][r.second].U = false;
+  //         if (r.first - 3 >= 0) {
+  //           matrix[r.first - 3][r.second].D = false;
+  //         }
+  //       }
+  //       if (r.second + 2 < m) {
+  //         matrix[r.first][r.second + 2].R = false;
+  //         if (r.second + 3 < m) {
+  //           matrix[r.first][r.second + 3].L = false;
+  //         }
+  //       }
+  //       if (r.first + 1 < n) {
+  //         matrix[r.first + 1][r.second].U = false;
+  //         matrix[r.first + 1][r.second + 1].U = false;
+  //       }
+  //       if (r.second - 1 >= 0) {
+  //         matrix[r.first][r.second - 1].L = false;
+  //         matrix[r.first - 1][r.second - 1].L = false;
+  //       }
+  //       solveRec(out, r, r, stringbuf(), 0, '\0');
+  //     }
+  //   }
+  // }
 }
