@@ -85,12 +85,14 @@ int main(int argc, char **argv) {
 
   // Placing the walls
   placeWalls(N, M);
-	cout << "done"<<endl;
   vector<vector<cell>> support = matrix;
-
+	cout<<"done"<<endl;
+  int csa=0;
   while(true){
+    csa++;
+	  cout<<csa<<endl;
     matrix = support;
-    makePath(rand()%N, rand()%M, &out);
+    makePath(blacks[0].first, blacks[0].second, &out);
   }
   out.close();
   in.close();
