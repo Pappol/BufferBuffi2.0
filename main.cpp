@@ -369,20 +369,21 @@ string makePath(int start_x, int start_y, ofstream *out){
 
   do{
     if(matrix[cell.first][cell.second].type != 0) n_anelli++;
-    cout<<"mossa";
+    //cout<<"mossa";
     move = muovi(cell.first, cell.second, move);
-    cout<<"("<<move<<") - ";
-    cout<<"nuova cella";
+    //cout<<"("<<move<<") - ";
+    //cout<<"nuova cella";
     cell = getNextCell(cell.first, cell.second, move);
-    cout<<"("<<cell.first<<" , "<<cell.second<<") - ";
+    //cout<<"("<<cell.first<<" , "<<cell.second<<") - ";
     if(cell.first==start_x && cell.second==start_y){
+      percorso.sputc(move);
       move='#';
       close = true;
       //cout<<" #chiuso# ";
     }
-    cout<<"inserimento - ";
+    //cout<<"inserimento - ";
     percorso.sputc(move);
-    cout<<"new round!"<<endl;
+    //cout<<"new round!"<<endl;
   }while( move != '#');
 
   punti = 5*n_anelli/(B+W);
