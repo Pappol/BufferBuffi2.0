@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
   }
   // Placing the walls
   placeWalls(N, M);
+  cout<<"---------------WALL PLACED---------------"<<endl;
 
   vector<vector<cell>> support = matrix;
 
@@ -324,7 +325,7 @@ char muovi(int x, int y, char precDir){
         else if(precDir == 'U' && x-1>=0) bound(x-1, y, 'D');
         else if(precDir == 'D' && x+1<N) bound(x+1, y, 'U');
     }
-    //se la cella è nera deve per forza andare dritta 
+    //se la cella è nera deve per forza andare dritta nella cella successiva
     if(matrix[x][y].type == 2){
       if(dir == 'L' || dir == 'R'){
         if(nextCell.first-1 >= 0) bound(nextCell.first-1, nextCell.second, 'U');
@@ -404,16 +405,16 @@ string makePath(int start_x, int start_y, ofstream *out){
   if(!close) punti = punti/2;
   //*out<<punti<<" ---> "<<percorso.str().length();
   if(maxPoint < punti){
-    *out << endl << n_anelli <<" "<< percorso.str().length()-1 <<" "<< start_x <<" "<< start_y <<" "<<percorso.str();
+    *out << n_anelli <<" "<< percorso.str().length()-1 <<" "<< start_x <<" "<< start_y <<" "<<percorso.str()<<endl;
     cout<<"START: ("<<start_x<<" , "<<start_y<<")"<<endl;
     cout<<"ANELLI: "<<n_anelli<<endl;
     cout<<"PUNTI: "<<punti<<endl;
     cout<<"PERCORSO GENERATO: "<<percorso.str()<<endl<<endl;
-
+    maxPoint = punti;
+    //fflush()
   }
   //*out<<endl;
-
-  maxPoint = max(punti, maxPoint);
+  //cout<<"punti: "<<punti<<endl;
 
   return percorso.str();
 }
