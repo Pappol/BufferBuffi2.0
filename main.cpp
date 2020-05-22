@@ -37,6 +37,22 @@ void placeWalls();
 // Search for a solution via backtracking
 void solve();
 
+// Safe method that tries to put a wall in a given cell returning the previous
+// value of the wall:
+// -true  if there was not a wall or the cell is outside the matrix
+// -false if the wall was already there
+bool wallIfPossible(int row, int column, char directionToWall);
+
+// Sets matrix[row][column] to prevState if possible
+void restoreWall(int row, int column, char dir, bool prevState);
+
+// Saves the state pushing it in the stack
+void saveState(stack<bitset<24>> s, rc currentCell);
+
+// Restores the given state in the matrix (you must pass the cell in which it
+// was centered)
+void restoreState(bitset<24> state, rc centralCell);
+
 int main(int argc, char **argv) {
   int B, W;
   // Initialization
@@ -77,13 +93,11 @@ int main(int argc, char **argv) {
   // Placing the walls
   placeWalls();
 
-  out << endl;
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
-      out << matrix[i][j].type;
-    }
-    out << endl;
-  }
+  // Go
+  // solve();
+  cout << sizeof(bool);
+
+  // Will probably never get here, such a waste
   out.close();
   in.close();
   return 0;
@@ -237,10 +251,6 @@ void placeWalls() {
   // TODO: rosa
 }
 
-// Safe method that tries to put a wall in a given cell returning the previous
-// value of the wall:
-// -true  if there was not a wall or the cell is outside the matrix
-// -false if the wall was already there
 bool wallIfPossible(int row, int column, char directionToWall) {
   bool prevWallState = true;
   if (row >= 0 && row < n && column >= 0 && column < m)
@@ -269,8 +279,7 @@ bool wallIfPossible(int row, int column, char directionToWall) {
   return prevWallState;
 }
 
-// Sets matrix[row][column] to prevState if possible
-void restorePrevWallState(int row, int column, char dir, bool prevState) {
+void restoreWall(int row, int column, char dir, bool prevState) {
   if (row >= 0 && row < n && column >= 0 && column < m)
     switch (dir) {
     case 'U':
@@ -292,76 +301,13 @@ void restorePrevWallState(int row, int column, char dir, bool prevState) {
     }
 }
 
-// Ritorna il numero di anelli attraversati
-int solveRec(rc currentPosition, rc arrivo, int anelliAttraversati,
-             char previousMove, char prevPrevMove) {
-  if (prevPrevMove == '\0') { // 1st move
-    // start up
-    int anelliTot = whites.size() + blacks.size();
-    if (matrix[currentPosition.first][currentPosition.second].U) {
-      switch (matrix[currentPosition.first - 1][currentPosition.second].type) {
-      case VUOTO:
-        bool previous = wallIfPossible(currentPosition.first - 1,
-                                       currentPosition.second, 'D');
-        sb.sputc('U');
-        if (solveRec(rc(currentPosition.first - 1, currentPosition.second),
-                     arrivo, anelliAttraversati, 'U',
-                     previousMove) == anelliTot)
-          return 0;
-        sb.stossc();
-        restorePrevWallState(currentPosition.first - 1, currentPosition.second,
-                             'D', previous);
-        break;
-
-      default:
-        break;
-      }
-    }
-    // if (solveRec(rc(currentPosition.first, currentPosition.second), arrivo,
-    //              mosse, anelliAttraversati,
-    //              'U') == whites.size() + blacks.size()) {
-    // }
-  }
-  if (currentPosition.first == arrivo.first &&
-      currentPosition.second == arrivo.second) {
-    // TODO printsol();
-    return anelliAttraversati;
-  } else {
-    cell c = matrix[currentPosition.first][currentPosition.second];
-    if (c.U) {
-    }
-    if (c.D) {
-    }
-    if (c.L) {
-    }
-    if (c.R) {
-    }
-  }
-}
-
 void solve() {
-  rc start = rc(n / 2, n / 2);
+  rc start = rc(n / 2, m / 2);
   while (matrix[start.first][start.second].type != VUOTO)
     start = rc(rand() % n, rand() % m);
-  /*
-  In ciascuna posizione i valori del muro prima.
-  Ne bastano 6 e non 7 perché quello nella direz in cui arrivo lo aggiungo
-  sempre
-          ----------
-          |   4    |
-          |        |
-          |        |
-          ----------
-          |   3    |
-          1        2
-          | sempre |
-          ----------
-          |        |
-          5   ↑    6
-          |current |
-
-  */
-  stack<bool[6]> prevState = stack<bool[6]>();
+  // Keeps track of the presence/absence of walls at a given time around the
+  // cell, see https://imgur.com/a/9VC1ZLx for infos
+  stack<bitset<24>> states = stack<bitset<24>>();
   stack<char> stateMoves = stack<char>();
   stack<char> moves = stack<char>(); // most probably can use a 1024 bool array
   int bestPossible = whites.size() + blacks.size();
@@ -378,7 +324,8 @@ void solve() {
   }
   rc currentCell = rc(start.first, start.second);
   char previousMove;
-  bool mustGoStraight = false; // for blacks
+  // for blacks
+  bool mustGoStraight = false;
   do {
     rc nextCell = rc(currentCell.first, currentCell.second);
     // Direzione in cui da current arrivo a next
@@ -387,9 +334,9 @@ void solve() {
       dir = moves.top();
       moves.pop();
       if (dir != 'T') {
-        restoreState(prevState, stateMoves, currentCell);
+        restoreState(states.top(), currentCell);
       } else {
-        prevState.pop();
+        states.pop();
         stateMoves.pop();
         continue;
       }
@@ -502,16 +449,16 @@ void solve() {
     { // Un-wall anti going back
       switch (dir) {
       case 'U':
-        restorePrevWallState(nextCell.first, nextCell.second, 'D', true);
+        restoreWall(nextCell.first, nextCell.second, 'D', true);
         break;
       case 'D':
-        restorePrevWallState(nextCell.first, nextCell.second, 'U', true);
+        restoreWall(nextCell.first, nextCell.second, 'U', true);
         break;
       case 'L':
-        restorePrevWallState(nextCell.first, nextCell.second, 'R', true);
+        restoreWall(nextCell.first, nextCell.second, 'R', true);
         break;
       case 'R':
-        restorePrevWallState(nextCell.first, nextCell.second, 'L', true);
+        restoreWall(nextCell.first, nextCell.second, 'L', true);
         break;
       }
     }
@@ -519,75 +466,90 @@ void solve() {
   } while (bestFound < bestPossible || moves.empty());
 }
 
-// Saves the state in the stack
-void saveState(stack<bool[6]> s, rc nextCell, rc currentCell, char dir) {
-  bool state[6];
-  switch (dir) {
-  case 'U': {
-    state[0] = matrix[nextCell.first][nextCell.second].L;
-    state[1] = matrix[nextCell.first][nextCell.second].R;
-    state[2] = matrix[nextCell.first][nextCell.second].U;
-    state[3] =
-        nextCell.first > 0 && matrix[nextCell.first - 1][nextCell.second].U;
-    state[4] = matrix[currentCell.first][currentCell.second].L;
-    state[5] = matrix[currentCell.first][currentCell.second].R;
-    break;
+void saveState(stack<bitset<24>> s, rc currentCell) {
+  bitset<24> state = bitset<24>();
+  state[0] = matrix[currentCell.first][currentCell.second].U;
+  state[1] = matrix[currentCell.first][currentCell.second].L;
+  state[2] = matrix[currentCell.first][currentCell.second].D;
+  state[3] = matrix[currentCell.first][currentCell.second].R;
+  if (currentCell.first > 0) {
+    int row = currentCell.first - 1;
+    state[4] = matrix[row][currentCell.second].U;
+    state[5] = matrix[row][currentCell.second].L;
+    state[6] = matrix[row][currentCell.second].D;
+    state[7] = matrix[row][currentCell.second].R;
+    if (currentCell.first > 1)
+      matrix[currentCell.first - 2][currentCell.second].U = state[20];
   }
-  case 'D': {
-    state[0] = matrix[nextCell.first][nextCell.second].L;
-    state[1] = matrix[nextCell.first][nextCell.second].R;
-    state[2] = matrix[nextCell.first][nextCell.second].D;
-    state[3] =
-        nextCell.first + 1 < n && matrix[nextCell.first + 1][nextCell.second].D;
-    state[4] = matrix[currentCell.first][currentCell.second].L;
-    state[5] = matrix[currentCell.first][currentCell.second].R;
-    break;
+  if (currentCell.second > 0) {
+    int col = currentCell.second - 1;
+    state[8] = matrix[currentCell.first][col].U;
+    state[9] = matrix[currentCell.first][col].L;
+    state[10] = matrix[currentCell.first][col].D;
+    state[11] = matrix[currentCell.first][col].R;
+    if (currentCell.second > 1)
+      matrix[currentCell.first][currentCell.second - 2].L = state[21];
   }
-  case 'R': {
-    state[0] = matrix[nextCell.first][nextCell.second].U;
-    state[1] = matrix[nextCell.first][nextCell.second].D;
-    state[2] = matrix[nextCell.first][nextCell.second].R;
-    state[3] =
-        nextCell.first + 1 < m && matrix[nextCell.first + m][nextCell.second].R;
-    state[4] = matrix[currentCell.first][currentCell.second].U;
-    state[5] = matrix[currentCell.first][currentCell.second].D;
-    break;
+  if (currentCell.first + 1 < n) {
+    int col = currentCell.first;
+    state[12] = matrix[col][currentCell.second].U;
+    state[13] = matrix[col][currentCell.second].L;
+    state[14] = matrix[col][currentCell.second].D;
+    state[15] = matrix[col][currentCell.second].R;
+    if (currentCell.first + 2 < n)
+      matrix[currentCell.first + 2][currentCell.second].D = state[22];
   }
-  case 'L': {
-    state[0] = matrix[nextCell.first][nextCell.second].U;
-    state[1] = matrix[nextCell.first][nextCell.second].D;
-    state[2] = matrix[nextCell.first][nextCell.second].L;
-    state[3] =
-        nextCell.first > 0 && matrix[nextCell.first - 1][nextCell.second].L;
-    state[4] = matrix[currentCell.first][currentCell.second].U;
-    state[5] = matrix[currentCell.first][currentCell.second].D;
-    break;
-  }
+  if (currentCell.second + 1 < m) {
+    int row = currentCell.second + 1;
+    state[16] = matrix[currentCell.first][row].U;
+    state[17] = matrix[currentCell.first][row].L;
+    state[18] = matrix[currentCell.first][row].D;
+    state[19] = matrix[currentCell.first][row].R;
+    if (currentCell.second + 2 < m)
+      matrix[currentCell.first][currentCell.second + 2].R = state[23];
   }
   s.push(state);
 }
 
-// Pops one state from the stack and applies it back to the matrix, restoring it
-void restoreState(stack<bool[6]> s, stack<char> moves, rc currentCell) {
-  rc previousCell = rc(currentCell.first, currentCell.second);
-  switch (moves.top()) { // determine previousCell coordinates
-  case 'U':
-    previousCell.first--;
-    break;
-  case 'D':
-    previousCell.first++;
-    break;
-  case 'L':
-    previousCell.second++;
-    break;
-  case 'R':
-    previousCell.second--;
-    break;
-  default:
-    break;
+void restoreState(bitset<24> state, rc center) {
+  matrix[center.first][center.second].U = state[0];
+  matrix[center.first][center.second].L = state[1];
+  matrix[center.first][center.second].D = state[2];
+  matrix[center.first][center.second].R = state[3];
+  if (center.first > 0) {
+    int row = center.first - 1;
+    matrix[row][center.second].U = state[4];
+    matrix[row][center.second].L = state[5];
+    matrix[row][center.second].D = state[6];
+    matrix[row][center.second].R = state[7];
+    if (center.first > 1)
+      matrix[center.first - 2][center.second].U = state[20];
   }
-  bool state[6];
-  for (int i = 0; i < 6; i++)
-    state[i] = s.top()[i];
-  // restore
+  if (center.second > 0) {
+    int col = center.second - 1;
+    matrix[center.first][col].U = state[8];
+    matrix[center.first][col].L = state[9];
+    matrix[center.first][col].D = state[10];
+    matrix[center.first][col].R = state[11];
+    if (center.second > 1)
+      matrix[center.first][center.second - 2].L = state[21];
+  }
+  if (center.first + 1 < n) {
+    int col = center.first;
+    matrix[col][center.second].U = state[12];
+    matrix[col][center.second].L = state[13];
+    matrix[col][center.second].D = state[14];
+    matrix[col][center.second].R = state[15];
+    if (center.first + 2 < n)
+      matrix[center.first + 2][center.second].D = state[22];
+  }
+  if (center.second + 1 < m) {
+    int row = center.second + 1;
+    matrix[center.first][row].U = state[16];
+    matrix[center.first][row].L = state[17];
+    matrix[center.first][row].D = state[18];
+    matrix[center.first][row].R = state[19];
+    if (center.second + 2 < m)
+      matrix[center.first][center.second + 2].R = state[23];
+  }
 }
