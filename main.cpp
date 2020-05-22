@@ -16,29 +16,33 @@ typedef struct {
   bool R = true;  // Can go right from here
   short type = 0; // 0=vuota,1=bianca, 2=nera
 } cell;
+
+// Globals
 vector<vector<cell>> matrix;
 ushort n, m;
 vector<rc> blacks, whites;
+ofstream out("output.txo");
+ifstream in("input.txt");
+stringbuf sb;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
 // gets printed anyway. Returns ring count w/ a rectangular solution.
-int checkForRectangles(ofstream *out);
+int checkForRectangles();
 
 // Modifies matrix "placing walls" (forbidding moves that would surely lead into
 // darkness)
 void placeWalls();
 
 // Search for a solution via backtracking
-void solve(ofstream *out);
+void solve();
 
 int main(int argc, char **argv) {
   int B, W;
-  ifstream in("input.txt");
-  ofstream out("output.txt");
   // Initialization
   in >> n >> m >> B >> W;
   matrix = vector<vector<cell>>(n, vector<cell>(m, cell()));
+  sb = stringbuf();
   // Forbidding invalid moves
   for (int i = 0; i < m; i++) {
     matrix[0][i].U = false;
@@ -67,7 +71,7 @@ int main(int argc, char **argv) {
   }
   // Checking if a rectangle could be the optimal solution
   if (W <= 8 && B <= 4) {
-    if (checkForRectangles(&out) == B + W)
+    if (checkForRectangles() == B + W)
       return 0;
   }
   // Placing the walls
@@ -85,7 +89,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-int checkForRectangles(ofstream *out) {
+int checkForRectangles() {
   pair<short, short> topLeft, topRight, bottomRight;
   topLeft = topRight = bottomRight = pair<short, short>(-1, -1);
   for (int i = 0; i < n; i++) {
@@ -139,8 +143,8 @@ int checkForRectangles(ofstream *out) {
       break;
     }
   }
-  *out << anelli << " " << s.length() << " " << topLeft.first << " "
-       << topLeft.second << " " << s << "#" << endl;
+  out << anelli << " " << s.length() << " " << topLeft.first << " "
+      << topLeft.second << " " << s << "#" << endl;
   return anelli;
 }
 
@@ -233,15 +237,90 @@ void placeWalls() {
   // TODO: rosa
 }
 
-// Ritorna il numero di anelli attraversati
-int solveRec(ofstream *out, rc currentPosition, rc arrivo, stringbuf mosse,
-             int anelliAttraversati, char previousMove) {
-  if (previousMove == '\0') {
-    // start up
-    if (solveRec(out, rc(currentPosition.first, currentPosition.second), arrivo,
-                 mosse, anelliAttraversati,
-                 'U') == whites.size() + blacks.size()) {
+// Safe method that tries to put a wall in a given cell returning the previous
+// value of the wall:
+// -true  if there was not a wall or the cell is outside the matrix
+// -false if the wall was already there
+bool wallIfPossible(int row, int column, char directionToWall) {
+  bool prevWallState = true;
+  if (row >= 0 && row < n && column >= 0 && column < m)
+    switch (directionToWall) {
+    case 'U':
+      prevWallState = matrix[row][column].U;
+      matrix[row][column].U = false;
+      break;
+    case 'D':
+      prevWallState = matrix[row][column].D;
+      matrix[row][column].D = false;
+      break;
+    case 'L':
+      prevWallState = matrix[row][column].L;
+      matrix[row][column].L = false;
+      break;
+    case 'R':
+      prevWallState = matrix[row][column].R;
+      matrix[row][column].R = false;
+      break;
+
+    default:
+      perror("invalid direction");
+      exit(1);
     }
+  return prevWallState;
+}
+
+// Sets matrix[row][column] to prevState if possible
+void restorePrevWallState(int row, int column, char dir, bool prevState) {
+  if (row >= 0 && row < n && column >= 0 && column < m)
+    switch (dir) {
+    case 'U':
+      matrix[row][column].U = prevState;
+      break;
+    case 'D':
+      matrix[row][column].D = prevState;
+      break;
+    case 'L':
+      matrix[row][column].L = prevState;
+      break;
+    case 'R':
+      matrix[row][column].R = prevState;
+      break;
+
+    default:
+      perror("invalid direction");
+      exit(1);
+    }
+}
+
+// Ritorna il numero di anelli attraversati
+int solveRec(rc currentPosition, rc arrivo, int anelliAttraversati,
+             char previousMove, char prevPrevMove) {
+  if (prevPrevMove == '\0') { // 1st move
+    // start up
+    int anelliTot = whites.size() + blacks.size();
+    if (matrix[currentPosition.first][currentPosition.second].U) {
+      switch (matrix[currentPosition.first - 1][currentPosition.second].type) {
+      case VUOTO:
+        bool previous = wallIfPossible(currentPosition.first - 1,
+                                       currentPosition.second, 'D');
+        sb.sputc('U');
+        if (solveRec(rc(currentPosition.first - 1, currentPosition.second),
+                     arrivo, anelliAttraversati, 'U',
+                     previousMove) == anelliTot)
+          return 0;
+        sb.stossc();
+        restorePrevWallState(currentPosition.first - 1, currentPosition.second,
+                             'D', previous);
+        break;
+
+      default:
+        break;
+      }
+    }
+    // if (solveRec(rc(currentPosition.first, currentPosition.second), arrivo,
+    //              mosse, anelliAttraversati,
+    //              'U') == whites.size() + blacks.size()) {
+    // }
   }
   if (currentPosition.first == arrivo.first &&
       currentPosition.second == arrivo.second) {
@@ -260,93 +339,210 @@ int solveRec(ofstream *out, rc currentPosition, rc arrivo, stringbuf mosse,
   }
 }
 
-void solve(ofstream *out) {
-  // for (rc r : blacks) {
-  //   int bianchiVicini = 0;
-  //   if (r.first >= 2 && matrix[r.first - 1][r.second].type == BIANCO &&
-  //       matrix[r.first - 1][r.second].D &&
-  //       (r.first + 1 == n ||
-  //        (r.first + 1 < n &&
-  //         matrix[r.first + 1][r.second].type != BIANCO))) { // bianco sopra
-  //         nero
-  //     if (r.second >= 2 && matrix[r.first][r.second - 1].type == BIANCO &&
-  //         matrix[r.first][r.second - 1].R &&
-  //         ((r.second + 1 < m && matrix[r.first][r.second + 1].type != BIANCO)
-  //         ||
-  //          r.second + 1 == m)) { // secondo bianco a sx
-  //       /*
-  //          w
-  //         wb
-  //       */
-  //       matrix[r.first][r.second - 1].U = false;
-  //       matrix[r.first][r.second - 1].D = false;
-  //       matrix[r.first - 1][r.second].R = false;
-  //       matrix[r.first - 1][r.second].L = false;
-  //       matrix[r.first - 1][r.second - 1].R = false;
-  //       matrix[r.first - 1][r.second - 1].D = false;
-  //       matrix[r.first][r.second].R = false;
-  //       matrix[r.first][r.second].D = false;
-  //       if (r.first - 2 >= 0) {
-  //         matrix[r.first - 2][r.second].U = false;
-  //         if (r.first - 3 >= 0) {
-  //           matrix[r.first - 3][r.second].D = false;
-  //         }
-  //       }
-  //       if (r.second - 2 >= 0) {
-  //         matrix[r.first][r.second - 2].L = false;
-  //         if (r.second - 3 >= 0) {
-  //           matrix[r.first][r.second - 3].R = false;
-  //         }
-  //       }
-  //       if (r.first + 1 < n) {
-  //         matrix[r.first + 1][r.second].U = false;
-  //         matrix[r.first + 1][r.second - 1].U = false;
-  //       }
-  //       if (r.second + 1 < m) {
-  //         matrix[r.first][r.second + 1].L = false;
-  //         matrix[r.first - 1][r.second + 1].L = false;
-  //       }
-  rc r = rc(n / 2, m / 2);
-  solveRec(out, r, r, stringbuf(), 0, '\0');
-  //     } else if (r.second + 2 < m &&
-  //                matrix[r.first][r.second + 1].type == BIANCO &&
-  //                matrix[r.first][r.second + 1].L &&
-  //                ((r.second - 1 >= 0 &&
-  //                  matrix[r.first][r.second - 1].type != BIANCO) ||
-  //                 r.second == 0)) { // secondo bianco a dx
-  //       /* w
-  //          bw
-  //       */
-  //       matrix[r.first][r.second + 1].U = false;
-  //       matrix[r.first][r.second + 1].D = false;
-  //       matrix[r.first - 1][r.second].R = false;
-  //       matrix[r.first - 1][r.second].L = false;
-  //       matrix[r.first - 1][r.second + 1].L = false;
-  //       matrix[r.first - 1][r.second + 1].D = false;
-  //       matrix[r.first][r.second].L = false;
-  //       matrix[r.first][r.second].D = false;
-  //       if (r.first - 2 >= 0) {
-  //         matrix[r.first - 2][r.second].U = false;
-  //         if (r.first - 3 >= 0) {
-  //           matrix[r.first - 3][r.second].D = false;
-  //         }
-  //       }
-  //       if (r.second + 2 < m) {
-  //         matrix[r.first][r.second + 2].R = false;
-  //         if (r.second + 3 < m) {
-  //           matrix[r.first][r.second + 3].L = false;
-  //         }
-  //       }
-  //       if (r.first + 1 < n) {
-  //         matrix[r.first + 1][r.second].U = false;
-  //         matrix[r.first + 1][r.second + 1].U = false;
-  //       }
-  //       if (r.second - 1 >= 0) {
-  //         matrix[r.first][r.second - 1].L = false;
-  //         matrix[r.first - 1][r.second - 1].L = false;
-  //       }
-  //       solveRec(out, r, r, stringbuf(), 0, '\0');
-  //     }
-  //   }
-  // }
+void solve() {
+  rc start = rc(n / 2, n / 2);
+  while (matrix[start.first][start.second].type != VUOTO)
+    start = rc(rand() % n, rand() % m);
+  stack<bool[4]> prevState = stack<bool[4]>();
+  /*
+  In ciascuna posizione i valori del muro prima.
+  Ne bastano 4 e non 5 perché quello nella direz in cui arrivo lo aggiungo
+  sempre
+          ----------
+          |   4    |
+          |        |
+          |        |
+          ----------
+          |   3    |
+          1        2
+          | sempre |
+          ----------
+          |        |
+          |   ↑    |
+          |current |
+
+  */
+  stack<char> moves = stack<char>(); // most probably can use a 1024 bool array
+  int bestPossible = whites.size() + blacks.size();
+  int bestFound = 0;
+  { // insert initial moves
+    if (matrix[start.first][start.second].U)
+      moves.push('U');
+    if (matrix[start.first][start.second].L)
+      moves.push('L');
+    if (matrix[start.first][start.second].D)
+      moves.push('D');
+    if (matrix[start.first][start.second].R)
+      moves.push('R');
+  }
+  rc currentCell = rc(start.first, start.second);
+  char previousMove;
+  bool mustGoStraight = false; // for blacks
+  do {
+    rc nextCell = rc(currentCell.first, currentCell.second);
+    // Direzione in cui da current arrivo a next
+    char dir;
+    { // get next direction from the queue and initialize nextCell
+      dir = moves.top();
+      moves.pop();
+      { // initialize nextCell to correct value
+        switch (dir) {
+        case 'U':
+          nextCell.first--;
+          break;
+        case 'D':
+          nextCell.first++;
+          break;
+        case 'L':
+          nextCell.second--;
+          break;
+        case 'R':
+          nextCell.second++;
+          break;
+        }
+      }
+    }
+    bool state[4];
+    { // save previous state
+      switch (dir) {
+      case 'U': {
+        state[0] = matrix[nextCell.first][nextCell.second].L;
+        state[1] = matrix[nextCell.first][nextCell.second].R;
+        state[2] = matrix[nextCell.first][nextCell.second].U;
+        state[3] =
+            nextCell.first > 0 && matrix[nextCell.first - 1][nextCell.second].U;
+        break;
+      }
+      case 'D': {
+        state[0] = matrix[nextCell.first][nextCell.second].L;
+        state[1] = matrix[nextCell.first][nextCell.second].R;
+        state[2] = matrix[nextCell.first][nextCell.second].D;
+        state[3] = nextCell.first + 1 < n &&
+                   matrix[nextCell.first + 1][nextCell.second].D;
+        break;
+      }
+      case 'R': {
+        state[0] = matrix[nextCell.first][nextCell.second].U;
+        state[1] = matrix[nextCell.first][nextCell.second].D;
+        state[2] = matrix[nextCell.first][nextCell.second].R;
+        state[3] = nextCell.first + 1 < m &&
+                   matrix[nextCell.first + m][nextCell.second].R;
+        break;
+      }
+      case 'L': {
+        state[0] = matrix[nextCell.first][nextCell.second].U;
+        state[1] = matrix[nextCell.first][nextCell.second].D;
+        state[2] = matrix[nextCell.first][nextCell.second].L;
+        state[3] =
+            nextCell.first > 0 && matrix[nextCell.first - 1][nextCell.second].L;
+        break;
+      }
+      }
+    }
+    switch (matrix[nextCell.first][nextCell.second].type) { // limit next moves
+    case BIANCO: {
+      if (previousMove == dir) { // Did not turn before crossing
+        switch (dir) {           // must turn afterwards
+        case 'U':
+          wallIfPossible(nextCell.first - 1, nextCell.second, 'U');
+          break;
+        case 'D':
+          wallIfPossible(nextCell.first + 1, nextCell.second, 'D');
+          break;
+        case 'R':
+          wallIfPossible(nextCell.first, nextCell.second + 1, 'R');
+          break;
+        case 'L':
+          wallIfPossible(nextCell.first, nextCell.second - 1, 'L');
+          break;
+        }
+      }
+      bool canContinue = false;
+      switch (dir) {
+      case 'U':
+        canContinue = matrix[nextCell.first][nextCell.second].U;
+        break;
+      case 'D':
+        canContinue = matrix[nextCell.first][nextCell.second].D;
+        break;
+      case 'L':
+        canContinue = matrix[nextCell.first][nextCell.second].L;
+        break;
+      case 'R':
+        canContinue = matrix[nextCell.first][nextCell.second].R;
+        break;
+      }
+      if (canContinue)
+        moves.push(dir); // can only go straight
+      break;
+    }
+    case NERO: {
+      mustGoStraight = true;
+      wallIfPossible(nextCell.first, nextCell.second, dir); // must turn
+      if (matrix[nextCell.first][nextCell.second].R) {
+        moves.push('R');
+      }
+      if (matrix[nextCell.first][nextCell.second].L) {
+        moves.push('L');
+      }
+      break;
+    }
+    case VUOTO: {
+      if (mustGoStraight) {
+        moves.push(dir);
+        mustGoStraight = false;
+      } else { // can go anywhere he wants
+        if (matrix[nextCell.first][nextCell.second].R)
+          moves.push('R');
+        if (matrix[nextCell.first][nextCell.second].L)
+          moves.push('L');
+        if (matrix[nextCell.first][nextCell.second].D)
+          moves.push('D');
+        if (matrix[nextCell.first][nextCell.second].U)
+          moves.push('U');
+      }
+      break;
+    }
+    }
+    { // prevent going backwards
+      switch (dir) {
+      case 'U':
+        wallIfPossible(nextCell.first, nextCell.second, 'D');
+        break;
+      case 'D':
+        wallIfPossible(nextCell.first, nextCell.second, 'U');
+        break;
+      case 'L':
+        wallIfPossible(nextCell.first, nextCell.second, 'R');
+        break;
+      case 'R':
+        wallIfPossible(nextCell.first, nextCell.second, 'L');
+        break;
+      }
+    }
+
+    if (nextCell.first == start.first && nextCell.second == start.second) {
+      // TODO yay
+    }
+
+    // set walls and memorize prevState
+    // restore walls to try previous direction
+    { // Un-wall anti going back
+      switch (dir) {
+      case 'U':
+        restorePrevWallState(nextCell.first, nextCell.second, 'D', true);
+        break;
+      case 'D':
+        restorePrevWallState(nextCell.first, nextCell.second, 'U', true);
+        break;
+      case 'L':
+        restorePrevWallState(nextCell.first, nextCell.second, 'R', true);
+        break;
+      case 'R':
+        restorePrevWallState(nextCell.first, nextCell.second, 'L', true);
+        break;
+      }
+    }
+    previousMove = dir;
+  } while (bestFound < bestPossible || moves.empty());
 }
