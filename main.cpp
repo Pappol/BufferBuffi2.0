@@ -306,6 +306,8 @@ void bound(int x, int y, char dir){
 char muovi(int x, int y, char precDir){
     char dir = pickRandom( matrix[x][y].U, matrix[x][y].D, matrix[x][y].R, matrix[x][y].L, precDir );
     if(dir == '#') return dir;
+
+    rc nextCell = getNextCell(x, y, dir); 
     //controllo direzione se c'è un anello
     //serve??? (in teoria no perchè metto già tutti i muri giusti)
 
@@ -322,6 +324,16 @@ char muovi(int x, int y, char precDir){
         else if(precDir == 'U' && x-1>=0) bound(x-1, y, 'D');
         else if(precDir == 'D' && x+1<N) bound(x+1, y, 'U');
     }
+    //se la cella è nera deve per forza andare dritta 
+    if(matrix[x][y].type == 2){
+      if(dir == 'L' || dir == 'R'){
+        if(nextCell.first-1 >= 0) bound(nextCell.first-1, nextCell.second, 'U');
+        if(nextCell.first+1 < N) bound(nextCell.first+1, nextCell.second, 'D');
+      } else{
+        if(nextCell.second-1 >= 0) bound(nextCell.first, nextCell.second-1, 'R');
+        if(nextCell.second+1 < M) bound(nextCell.first, nextCell.second+1, 'L');
+      }
+    }
     //se la cella corrente è bianca metto i muri in modo concorde allo spostamento
     //se la cella corrente è vuota e la direzione precedente è uguale alla corrente si comporta da bianca
     if(matrix[x][y].type == 1 || (matrix[x][y].type == 0 && dir == precDir)){
@@ -335,7 +347,7 @@ char muovi(int x, int y, char precDir){
     }
 
     //MURI IN BASE ALLA CELLA IN CUI MI TROVO DOPO LO SPOSTAMENTO CHE HO FATTO
-    rc nextCell = getNextCell(x, y, dir);  
+     
     if(matrix[nextCell.first][nextCell.second].type == 2){  //se è nera metto un muro per evitare che la mossa dopo vada dritta
         bound(nextCell.first, nextCell.second, dir);
     }
@@ -376,10 +388,12 @@ string makePath(int start_x, int start_y, ofstream *out){
     cell = getNextCell(cell.first, cell.second, move);
     //cout<<"("<<cell.first<<" , "<<cell.second<<") - ";
     if(cell.first==start_x && cell.second==start_y){
-      percorso.sputc(move);
-      move='#';
-      close = true;
-      //cout<<" #chiuso# ";
+      if(move != '#'){
+        percorso.sputc(move);
+        move='#';
+        close = true;
+        //cout<<" #chiuso# ";
+      }
     }
     //cout<<"inserimento - ";
     percorso.sputc(move);
