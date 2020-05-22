@@ -82,7 +82,10 @@ int main(int argc, char **argv) {
   // Placing the walls
   placeWalls(N, M);
 
+  vector<vector<cell>> support = matrix;
+
   while(true){
+    matrix = support;
     makePath(rand()%N, rand()%M, &out);
   }
 
@@ -321,7 +324,7 @@ char muovi(int x, int y, char precDir){
     }
     //se la cella corrente è bianca metto i muri in modo concorde allo spostamento
     //se la cella corrente è vuota e la direzione precedente è uguale alla corrente si comporta da bianca
-    if(matrix[x][y].type == 2 || (matrix[x][y].type == 0 && dir == precDir)){
+    if(matrix[x][y].type == 1 || (matrix[x][y].type == 0 && dir == precDir)){
         if(dir == 'U' || dir == 'D'){   //se sono andato a dx o sx metto i muri sopra e sotto
             if(y-1>=0) bound(x, y-1, 'R');
             if(y+1<M) bound(x, y+1, 'L');
@@ -366,32 +369,31 @@ string makePath(int start_x, int start_y, ofstream *out){
 
   do{
     if(matrix[cell.first][cell.second].type != 0) n_anelli++;
-    //cout<<"mossa";
+    cout<<"mossa";
     move = muovi(cell.first, cell.second, move);
-    //cout<<"("<<move<<") - ";
-    //cout<<"nuova cella";
+    cout<<"("<<move<<") - ";
+    cout<<"nuova cella";
     cell = getNextCell(cell.first, cell.second, move);
-    //cout<<"("<<cell.first<<" , "<<cell.second<<") - ";
+    cout<<"("<<cell.first<<" , "<<cell.second<<") - ";
     if(cell.first==start_x && cell.second==start_y){
       move='#';
       close = true;
       //cout<<" #chiuso# ";
     }
-    //cout<<"inserimento - ";
+    cout<<"inserimento - ";
     percorso.sputc(move);
-    //cout<<"new round!"<<endl;
+    cout<<"new round!"<<endl;
   }while( move != '#');
 
   punti = 5*n_anelli/(B+W);
   if(!close) punti = punti/2;
   //*out<<punti<<" ---> "<<percorso.str().length();
   if(maxPoint < punti){
-    *out << n_anelli <<" "<< percorso.str().length()-1 <<" "<< start_x <<" "<< start_y <<" "<<percorso.str()<<endl;
+    *out << endl << n_anelli <<" "<< percorso.str().length()-1 <<" "<< start_x <<" "<< start_y <<" "<<percorso.str();
     cout<<"START: ("<<start_x<<" , "<<start_y<<")"<<endl;
     cout<<"ANELLI: "<<n_anelli<<endl;
     cout<<"PUNTI: "<<punti<<endl;
-    cout<<"PERCORSO GENERATO: ";
-    cout<<percorso.str()<<endl<<endl;
+    cout<<"PERCORSO GENERATO: "<<percorso.str()<<endl<<endl;
 
   }
   //*out<<endl;
