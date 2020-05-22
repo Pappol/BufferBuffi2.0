@@ -21,9 +21,9 @@ typedef struct {
 vector<vector<cell>> matrix;
 ushort n, m;
 vector<rc> blacks, whites;
-ofstream out("output.txo");
+ofstream out("output.txt");
 ifstream in("input.txt");
-stringbuf sb;
+stack<bitset<24>> states;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -47,7 +47,7 @@ bool wallIfPossible(int row, int column, char directionToWall);
 void restoreWall(int row, int column, char dir, bool prevState);
 
 // Saves the state pushing it in the stack
-void saveState(stack<bitset<24>> s, rc currentCell);
+void saveState(rc currentCell);
 
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
@@ -58,18 +58,15 @@ int main(int argc, char **argv) {
   // Initialization
   in >> n >> m >> B >> W;
   matrix = vector<vector<cell>>(n, vector<cell>(m, cell()));
-  sb = stringbuf();
   // Forbidding invalid moves
-  for (int i = 0; i < m; i++) {
+  for (int i = 0; i < m; i++)
     matrix[0][i].U = false;
-  }
   for (int i = 0; i < n; i++) {
     matrix[i][0].L = false;
     matrix[i][m - 1].R = false;
   }
-  for (int i = 0; i < m; i++) {
+  for (int i = 0; i < m; i++)
     matrix[n - 1][i].D = false;
-  }
   // Getting rings' poitions
   blacks = vector<rc>(B);
   for (int i = 0; i < B; i++) {
@@ -94,8 +91,7 @@ int main(int argc, char **argv) {
   placeWalls();
 
   // Go
-  // solve();
-  cout << sizeof(bool);
+  solve();
 
   // Will probably never get here, such a waste
   out.close();
@@ -307,38 +303,46 @@ void solve() {
     start = rc(rand() % n, rand() % m);
   // Keeps track of the presence/absence of walls at a given time around the
   // cell, see https://imgur.com/a/9VC1ZLx for infos
-  stack<bitset<24>> states = stack<bitset<24>>();
-  stack<char> stateMoves = stack<char>();
-  stack<char> moves = stack<char>(); // most probably can use a 1024 bool array
+  states = stack<bitset<24>>();
+  stack<char> mosseFatte = stack<char>();
+  stack<char> mosseDaFare = stack<char>(); // quando si pusha un nuovo gruppo si
+                                           // mette 'T' all'inizio e si salva lo
+                                           // stato della cella (corrente?)
   int bestPossible = whites.size() + blacks.size();
-  int bestFound = 0;
+  float bestFound = 0;
   { // insert initial moves
     if (matrix[start.first][start.second].U)
-      moves.push('U');
+      mosseDaFare.push('U');
     if (matrix[start.first][start.second].L)
-      moves.push('L');
+      mosseDaFare.push('L');
     if (matrix[start.first][start.second].D)
-      moves.push('D');
+      mosseDaFare.push('D');
     if (matrix[start.first][start.second].R)
-      moves.push('R');
+      mosseDaFare.push('R');
   }
   rc currentCell = rc(start.first, start.second);
   char previousMove;
   // for blacks
   bool mustGoStraight = false;
+  // to know wether we are still going forward in the research of a path,
+  // meaningless while going back!
+  bool inNewCell = true;
   do {
+    if (inNewCell) {
+      saveState(currentCell);
+      inNewCell = false;
+    }
     rc nextCell = rc(currentCell.first, currentCell.second);
     // Direzione in cui da current arrivo a next
     char dir;
     { // get next direction from the queue and initialize nextCell
-      dir = moves.top();
-      moves.pop();
-      if (dir != 'T') {
-        restoreState(states.top(), currentCell);
-      } else {
+      dir = mosseDaFare.top();
+      mosseDaFare.pop();
+      if (dir == 'T') {
         states.pop();
-        stateMoves.pop();
         continue;
+      } else {
+        restoreState(states.top(), currentCell);
       }
       { // initialize nextCell to correct value
         switch (dir) {
@@ -358,7 +362,10 @@ void solve() {
       }
     }
 
-    switch (matrix[nextCell.first][nextCell.second].type) { // limit next moves
+    mosseDaFare.push('T'); // pushing it but will then pop if nothing was added
+    int stackSizeBefore = mosseDaFare.size();
+    switch (
+        matrix[nextCell.first][nextCell.second].type) { // Add valid next moves
     case BIANCO: {
       if (previousMove == dir) { // Did not turn before crossing
         switch (dir) {           // must turn afterwards
@@ -377,7 +384,7 @@ void solve() {
         }
       }
       bool canContinue = false;
-      switch (dir) {
+      switch (dir) { // Checking if we can pass the ring
       case 'U':
         canContinue = matrix[nextCell.first][nextCell.second].U;
         break;
@@ -392,33 +399,39 @@ void solve() {
         break;
       }
       if (canContinue)
-        moves.push(dir); // can only go straight
+        mosseDaFare.push(dir); // can only go straight
       break;
     }
     case NERO: {
       mustGoStraight = true;
+      bool hasPushedMoreMoves = false;
       wallIfPossible(nextCell.first, nextCell.second, dir); // must turn
-      if (matrix[nextCell.first][nextCell.second].R) {
-        moves.push('R');
-      }
-      if (matrix[nextCell.first][nextCell.second].L) {
-        moves.push('L');
+      if (dir == 'U' || dir == 'D') {
+        if (matrix[nextCell.first][nextCell.second].R)
+          mosseDaFare.push('R');
+        if (matrix[nextCell.first][nextCell.second].L)
+          mosseDaFare.push('L');
+      } else {
+        if (matrix[nextCell.first][nextCell.second].U)
+          mosseDaFare.push('U');
+        if (matrix[nextCell.first][nextCell.second].D)
+          mosseDaFare.push('D');
       }
       break;
     }
     case VUOTO: {
       if (mustGoStraight) {
-        moves.push(dir);
+        mosseDaFare.push(dir);
         mustGoStraight = false;
       } else { // can go anywhere he wants
         if (matrix[nextCell.first][nextCell.second].R)
-          moves.push('R');
+          mosseDaFare.push('R');
         if (matrix[nextCell.first][nextCell.second].L)
-          moves.push('L');
+          mosseDaFare.push('L');
         if (matrix[nextCell.first][nextCell.second].D)
-          moves.push('D');
+          mosseDaFare.push('D');
         if (matrix[nextCell.first][nextCell.second].U)
-          moves.push('U');
+          mosseDaFare.push('U');
       }
       break;
     }
@@ -440,33 +453,29 @@ void solve() {
       }
     }
 
-    if (nextCell.first == start.first && nextCell.second == start.second) {
-      // TODO yay
-    }
+    cout << mosseDaFare.size() << endl;
+    if (stackSizeBefore >
+        mosseDaFare.size()) // If some moves were pushed we are still exploring
+      inNewCell = true;
+    else
+      mosseDaFare.pop();
 
-    // set walls and memorize prevState
-    // restore walls to try previous direction
-    { // Un-wall anti going back
-      switch (dir) {
-      case 'U':
-        restoreWall(nextCell.first, nextCell.second, 'D', true);
-        break;
-      case 'D':
-        restoreWall(nextCell.first, nextCell.second, 'U', true);
-        break;
-      case 'L':
-        restoreWall(nextCell.first, nextCell.second, 'R', true);
-        break;
-      case 'R':
-        restoreWall(nextCell.first, nextCell.second, 'L', true);
-        break;
+    if (nextCell.first == start.first && nextCell.second == start.second) {
+      int anelliAttraversati;
+      // TODO calcola numero anelliAttraversati
+      float frazioneAnelliAttraversata =
+          (float)anelliAttraversati / bestPossible;
+      if (frazioneAnelliAttraversata - bestFound > 0.1) {
+        // TODO print solution on out
+        bestFound = frazioneAnelliAttraversata;
       }
     }
     previousMove = dir;
-  } while (bestFound < bestPossible || moves.empty());
+    currentCell = nextCell;
+  } while (bestFound < 1 || mosseDaFare.empty());
 }
 
-void saveState(stack<bitset<24>> s, rc currentCell) {
+void saveState(rc currentCell) {
   bitset<24> state = bitset<24>();
   state[0] = matrix[currentCell.first][currentCell.second].U;
   state[1] = matrix[currentCell.first][currentCell.second].L;
@@ -508,7 +517,7 @@ void saveState(stack<bitset<24>> s, rc currentCell) {
     if (currentCell.second + 2 < m)
       matrix[currentCell.first][currentCell.second + 2].R = state[23];
   }
-  s.push(state);
+  states.push(state);
 }
 
 void restoreState(bitset<24> state, rc center) {
