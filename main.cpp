@@ -362,6 +362,7 @@ void solve() {
       if (dir == 'T') {
         stampaPercorso(stackCelle, dir);
         stackCelle.pop();
+        restoreState(states.top(), currentCell);
         states.pop();
         continue;
       } else {
@@ -498,8 +499,23 @@ void solve() {
     }
     case VUOTO: {
       if (mustGoStraight) {
-        mosseDaFare.push(dir);
-        mustGoStraight = false;
+        bool thereIsAWall = false;
+        switch (dir) { // checking if there's a wall against going straight
+        case 'U':
+          thereIsAWall = !matrix[nextCell.first][nextCell.second].U;
+          break;
+        case 'D':
+          thereIsAWall = !matrix[nextCell.first][nextCell.second].D;
+        case 'L':
+          thereIsAWall = !matrix[nextCell.first][nextCell.second].L;
+          break;
+        case 'R':
+          thereIsAWall = !matrix[nextCell.first][nextCell.second].R;
+        }
+        if (!thereIsAWall) { // can go on only if there's no wall
+          mosseDaFare.push(dir);
+          mustGoStraight = false;
+        }      // else: if there is a wall it will get back on its way
       } else { // can go anywhere he wants
         if (matrix[nextCell.first][nextCell.second].R)
           mosseDaFare.push('R');
@@ -520,14 +536,14 @@ void solve() {
       mosseDaFare.pop(); // moves were not added, remove eccess T
     previousMove = dir;
     stackCelle.push(nextCell);
-  } while (bestFound < 1 || mosseDaFare.empty());
+  } while (bestFound < 1 && !mosseDaFare.empty());
 }
 
 void saveState(rc currentCell) {
   cout << "saving state centered in " << currentCell.first << " "
-       << currentCell.second << endl;
+       << currentCell.second;
   out << "saving state centered in " << currentCell.first << " "
-      << currentCell.second << endl;
+      << currentCell.second;
   bitset<24> state = bitset<24>();
   state[0] = matrix[currentCell.first][currentCell.second].U;
   state[1] = matrix[currentCell.first][currentCell.second].L;
@@ -573,8 +589,9 @@ void saveState(rc currentCell) {
 }
 
 void restoreState(bitset<24> state, rc center) {
-  cout << "restoring state of cell " << center.first << " " << center.second;
-  out << "restoring state centered in " << center.first << " " << center.second;
+  cout << "\nrestoring state of cell " << center.first << " " << center.second;
+  out << "\nrestoring state centered in " << center.first << " "
+      << center.second;
   matrix[center.first][center.second].U = state[0];
   matrix[center.first][center.second].L = state[1];
   matrix[center.first][center.second].D = state[2];
