@@ -304,7 +304,7 @@ void solve() {
   // Keeps track of the presence/absence of walls at a given time around the
   // cell, see https://imgur.com/a/9VC1ZLx for infos
   states = stack<bitset<24>>();
-  stack<char> mosseFatte = stack<char>();
+  stack<rc> stackCelle = stack<rc>();
   stack<char> mosseDaFare = stack<char>(); // quando si pusha un nuovo gruppo si
                                            // mette 'T' all'inizio e si salva lo
                                            // stato della cella (corrente?)
@@ -327,11 +327,14 @@ void solve() {
   // to know wether we are still going forward in the research of a path,
   // meaningless while going back!
   bool inNewCell = true;
+  cout << currentCell.first << " " << currentCell.second << endl;
   do {
     if (inNewCell) {
       saveState(currentCell);
+      stackCelle.push(currentCell);
       inNewCell = false;
     }
+    currentCell = stackCelle.top();
     rc nextCell = rc(currentCell.first, currentCell.second);
     // Direzione in cui da current arrivo a next
     char dir;
@@ -340,8 +343,10 @@ void solve() {
       mosseDaFare.pop();
       if (dir == 'T') {
         states.pop();
+        stackCelle.pop();
         continue;
       } else {
+        cout << dir;
         restoreState(states.top(), currentCell);
       }
       { // initialize nextCell to correct value
@@ -359,6 +364,22 @@ void solve() {
           nextCell.second++;
           break;
         }
+      }
+    }
+    { // prevent going backwards
+      switch (dir) {
+      case 'U':
+        wallIfPossible(nextCell.first, nextCell.second, 'D');
+        break;
+      case 'D':
+        wallIfPossible(nextCell.first, nextCell.second, 'U');
+        break;
+      case 'L':
+        wallIfPossible(nextCell.first, nextCell.second, 'R');
+        break;
+      case 'R':
+        wallIfPossible(nextCell.first, nextCell.second, 'L');
+        break;
       }
     }
 
@@ -403,6 +424,8 @@ void solve() {
       break;
     }
     case NERO: {
+      if (previousMove != dir) // Must arrive w/ straight path
+        continue;
       mustGoStraight = true;
       bool hasPushedMoreMoves = false;
       wallIfPossible(nextCell.first, nextCell.second, dir); // must turn
@@ -436,25 +459,8 @@ void solve() {
       break;
     }
     }
-    { // prevent going backwards
-      switch (dir) {
-      case 'U':
-        wallIfPossible(nextCell.first, nextCell.second, 'D');
-        break;
-      case 'D':
-        wallIfPossible(nextCell.first, nextCell.second, 'U');
-        break;
-      case 'L':
-        wallIfPossible(nextCell.first, nextCell.second, 'R');
-        break;
-      case 'R':
-        wallIfPossible(nextCell.first, nextCell.second, 'L');
-        break;
-      }
-    }
 
-    cout << mosseDaFare.size() << endl;
-    if (stackSizeBefore >
+    if (stackSizeBefore <
         mosseDaFare.size()) // If some moves were pushed we are still exploring
       inNewCell = true;
     else
@@ -463,6 +469,7 @@ void solve() {
     if (nextCell.first == start.first && nextCell.second == start.second) {
       int anelliAttraversati;
       // TODO calcola numero anelliAttraversati
+      cout << "found a path, time to implement stopping logic";
       float frazioneAnelliAttraversata =
           (float)anelliAttraversati / bestPossible;
       if (frazioneAnelliAttraversata - bestFound > 0.1) {
@@ -471,7 +478,6 @@ void solve() {
       }
     }
     previousMove = dir;
-    currentCell = nextCell;
   } while (bestFound < 1 || mosseDaFare.empty());
 }
 
@@ -500,7 +506,7 @@ void saveState(rc currentCell) {
       matrix[currentCell.first][currentCell.second - 2].L = state[21];
   }
   if (currentCell.first + 1 < n) {
-    int col = currentCell.first;
+    int col = currentCell.first + 1;
     state[12] = matrix[col][currentCell.second].U;
     state[13] = matrix[col][currentCell.second].L;
     state[14] = matrix[col][currentCell.second].D;
@@ -544,7 +550,7 @@ void restoreState(bitset<24> state, rc center) {
       matrix[center.first][center.second - 2].L = state[21];
   }
   if (center.first + 1 < n) {
-    int col = center.first;
+    int col = center.first + 1;
     matrix[col][center.second].U = state[12];
     matrix[col][center.second].L = state[13];
     matrix[col][center.second].D = state[14];
