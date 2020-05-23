@@ -52,7 +52,10 @@ void saveState(rc currentCell);
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
 void restoreState(bitset<24> state, rc centralCell);
+
+//-------Debug functions------------
 void stampaPercorso(stack<rc> original, char prossimaMossa);
+void stampaStatoMatrice(rc cell, int numciclo);
 
 int main(int argc, char **argv) {
   int B, W;
@@ -330,9 +333,22 @@ void solve() {
   bool inNewCell = true;
   cout << currentCell.first << " " << currentCell.second << endl;
   stackCelle.push(currentCell);
+  int numciclo = 0; // TODO deleteme
+  out << "Ogni cella della matrice è rappresentata da un rombo.\n"
+         "Un vertice di questi rombi è una direzione e lo 0 indica un muro.\n"
+         "La x indica la cella in cui ci troviamo.\n\n"
+         "In [0][1] c'è un anello nero, che date le dimensioni della matrice \n"
+         "è impossibile attraversare. Al momento non è importante \n"
+         "attraversarlo ma"
+         "vedere che l'algoritmo esplora tutta la matrice\ncorrettamente.\n\n"
+         "In teoria ogni volta che si torna indietro in una cella i si "
+         "dovrebbe\n"
+         "ripristinare lo stato della cella i (e di quella da cui si sta \n"
+         "arrivando (se necessario)";
   do {
+    numciclo++;
+    stampaStatoMatrice(stackCelle.top(), numciclo - 1);
     currentCell = stackCelle.top();
-    stampaPercorso(stackCelle, mosseDaFare.top());
     if (inNewCell) {
       saveState(currentCell);
       inNewCell = false;
@@ -344,11 +360,13 @@ void solve() {
       dir = mosseDaFare.top();
       mosseDaFare.pop();
       if (dir == 'T') {
+        stampaPercorso(stackCelle, dir);
         stackCelle.pop();
         states.pop();
         continue;
       } else {
         restoreState(states.top(), currentCell);
+        stampaPercorso(stackCelle, dir);
       }
       { // initialize nextCell to correct value
         switch (dir) {
@@ -367,11 +385,13 @@ void solve() {
         }
       }
       cout << " to " << nextCell.first << "," << nextCell.second;
+      out << " to " << nextCell.first << "," << nextCell.second;
       { // check for solution
         if (nextCell.first == start.first && nextCell.second == start.second) {
           int anelliAttraversati = 0;
           // TODO calcola numero anelliAttraversati
           cout << "\n------found a path, time to implement stopping logic\n";
+          out << "\n------found a path, time to implement stopping logic\n";
           float frazioneAnelliAttraversata =
               (float)anelliAttraversati / bestPossible;
           if (frazioneAnelliAttraversata - bestFound > 0.1) {
@@ -381,9 +401,6 @@ void solve() {
           continue; // Like if this was a wrong path
         }
       }
-      // cout << "going from " << currentCell.first << " " << currentCell.second
-      //      << " to " << nextCell.first << " " << nextCell.second
-      //      << " with direction " << dir << endl;
     }
     { // put lateral walls in current cell to avoid intersecamenti strani
       if (currentCell.first != start.first &&
@@ -417,7 +434,6 @@ void solve() {
         break;
       }
     }
-
     mosseDaFare.push('T'); // pushing it but will then pop if nothing was added
     int stackSizeBefore = mosseDaFare.size();
     switch (
@@ -497,21 +513,21 @@ void solve() {
       break;
     }
     }
-
     if (stackSizeBefore <
         mosseDaFare.size()) // If some moves were pushed we are still exploring
       inNewCell = true;
     else
-      mosseDaFare.pop();
-
+      mosseDaFare.pop(); // moves were not added, remove eccess T
     previousMove = dir;
     stackCelle.push(nextCell);
   } while (bestFound < 1 || mosseDaFare.empty());
 }
 
 void saveState(rc currentCell) {
-  // cout << "saving state of cell " << currentCell.first << " "
-  //      << currentCell.second << endl;
+  cout << "saving state centered in " << currentCell.first << " "
+       << currentCell.second << endl;
+  out << "saving state centered in " << currentCell.first << " "
+      << currentCell.second << endl;
   bitset<24> state = bitset<24>();
   state[0] = matrix[currentCell.first][currentCell.second].U;
   state[1] = matrix[currentCell.first][currentCell.second].L;
@@ -557,8 +573,8 @@ void saveState(rc currentCell) {
 }
 
 void restoreState(bitset<24> state, rc center) {
-  // cout << "restoring state of cell " << center.first << " " << center.second
-  //      << endl;
+  cout << "restoring state of cell " << center.first << " " << center.second;
+  out << "restoring state centered in " << center.first << " " << center.second;
   matrix[center.first][center.second].U = state[0];
   matrix[center.first][center.second].L = state[1];
   matrix[center.first][center.second].D = state[2];
@@ -626,5 +642,37 @@ void stampaPercorso(stack<rc> original, char prossimaMossa) {
     inverted.pop();
     current = newRc;
   }
-  cout << endl << "percorso: " << sb.str() << " Next move>" << prossimaMossa;
+  cout << endl << "percorso: " << sb.str() << "\nNext move>" << prossimaMossa;
+  out << endl << "percorso: " << sb.str() << "\nNext move>" << prossimaMossa;
+}
+
+void stampaStatoMatrice(rc cell, int k) {
+  out << "\n\n-----------------------------\n";
+  cout << "\n\n-----------------------------\n";
+  out << "At start of cycle " << k << " matrix is:\n";
+  cout << "At start of cycle " << k << " matrix is:\n";
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      cout << "   " << (matrix[i][j].U ? '.' : '0') << "   ";
+      out << "   " << (matrix[i][j].U ? '.' : '0') << "   ";
+    }
+    out << endl;
+    cout << endl;
+    for (int j = 0; j < m; j++) {
+      bool amIHere = cell.first == i && cell.second == j;
+      cout << " " << (matrix[i][j].L ? '.' : '0') << " "
+           << (amIHere ? "x" : " ") << " " << (matrix[i][j].R ? '.' : '0')
+           << " ";
+      out << " " << (matrix[i][j].L ? '.' : '0') << " " << (amIHere ? "x" : " ")
+          << " " << (matrix[i][j].R ? '.' : '0') << " ";
+    }
+    out << endl;
+    cout << endl;
+    for (int j = 0; j < m; j++) {
+      cout << "   " << (matrix[i][j].D ? '.' : '0') << "   ";
+      out << "   " << (matrix[i][j].D ? '.' : '0') << "   ";
+    }
+    out << endl << endl;
+    cout << endl << endl;
+  }
 }

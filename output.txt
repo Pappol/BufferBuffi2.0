@@ -1,1 +1,700 @@
-16
+0 0 0 1 #
+Ogni cella della matrice è rappresentata da un rombo.
+Un vertice di questi rombi è una direzione e lo 0 indica un muro.
+La x indica la cella in cui ci troviamo.
+
+In [0][1] c'è un anello nero, che date le dimensioni della matrice 
+è impossibile attraversare. Al momento non è importante 
+attraversarlo mavedere che l'algoritmo esplora tutta la matrice
+correttamente.
+
+In teoria ogni volta che si torna indietro in una cella i si dovrebbe
+ripristinare lo stato della cella i (e di quella da cui si sta 
+arrivando (se necessario)
+
+-----------------------------
+At start of cycle 0 matrix is:
+   0      0      0   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  . x .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      0      0   
+
+saving state centered in 1 1
+restoring state centered in 1 1
+percorso: 
+Next move>R to 1,2
+
+-----------------------------
+At start of cycle 1 matrix is:
+   0      0      0   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0 x 0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      0      0   
+
+saving state centered in 1 2
+restoring state centered in 1 2
+percorso: R
+Next move>U to 0,2
+
+-----------------------------
+At start of cycle 2 matrix is:
+   0      0      0   
+ 0   .  .   .  . x 0 
+   .      .      0   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      0      0   
+
+saving state centered in 0 2
+restoring state centered in 0 2
+percorso: RU
+Next move>L to 0,1
+
+-----------------------------
+At start of cycle 3 matrix is:
+   0      0      0   
+ 0   .  .   0  . x 0 
+   .      .      0   
+
+   .      .      0   
+ 0   .  .   .  0   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      0      0   
+
+
+percorso: RU
+Next move>T
+
+-----------------------------
+At start of cycle 4 matrix is:
+   0      0      0   
+ 0   .  .   0  .   0 
+   .      .      0   
+
+   .      .      0   
+ 0   .  .   .  0 x 0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      0      0   
+
+restoring state centered in 1 2
+percorso: R
+Next move>D to 2,2
+
+-----------------------------
+At start of cycle 5 matrix is:
+   0      0      0   
+ 0   .  .   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   .      .      .   
+
+   .      .      0   
+ 0   .  .   .  . x 0 
+   0      0      0   
+
+saving state centered in 2 2
+restoring state centered in 2 2
+percorso: RD
+Next move>L to 2,1
+
+-----------------------------
+At start of cycle 6 matrix is:
+   0      0      0   
+ 0   .  .   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   .      .      0   
+
+   .      .      0   
+ 0   .  . x 0  .   0 
+   0      0      0   
+
+saving state centered in 2 1
+restoring state centered in 2 1
+percorso: RDL
+Next move>U to 1,1
+------found a path, time to implement stopping logic
+
+
+-----------------------------
+At start of cycle 7 matrix is:
+   0      0      0   
+ 0   .  .   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   .      .      0   
+
+   .      .      0   
+ 0   .  . x 0  .   0 
+   0      0      0   
+
+restoring state centered in 2 1
+percorso: RDL
+Next move>L to 2,0
+
+-----------------------------
+At start of cycle 8 matrix is:
+   0      0      0   
+ 0   .  .   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   .      .      0   
+
+   .      .      0   
+ 0 x 0  .   0  .   0 
+   0      0      0   
+
+saving state centered in 2 0
+restoring state centered in 2 0
+percorso: RDLL
+Next move>U to 1,0
+
+-----------------------------
+At start of cycle 9 matrix is:
+   0      0      0   
+ 0   .  .   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0 x .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+saving state centered in 1 0
+restoring state centered in 1 0
+percorso: RDLLU
+Next move>U to 0,0
+
+-----------------------------
+At start of cycle 10 matrix is:
+   0      0      0   
+ 0 x .  .   0  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+saving state centered in 0 0
+restoring state centered in 0 0
+percorso: RDLLUU
+Next move>R to 0,1
+
+-----------------------------
+At start of cycle 11 matrix is:
+   0      0      0   
+ 0 x .  0   0  .   0 
+   0      .      .   
+
+   0      .      .   
+ 0   .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+
+percorso: RDLLUU
+Next move>T
+
+-----------------------------
+At start of cycle 12 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   0      .      .   
+
+   0      .      .   
+ 0 x .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+restoring state centered in 1 0
+percorso: RDLLU
+Next move>R to 1,1
+------found a path, time to implement stopping logic
+
+
+-----------------------------
+At start of cycle 13 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0 x .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+
+percorso: RDLLU
+Next move>T
+
+-----------------------------
+At start of cycle 14 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0 x 0  0   0  .   0 
+   0      0      0   
+
+
+percorso: RDLL
+Next move>T
+
+-----------------------------
+At start of cycle 15 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0 x 0  .   0 
+   0      0      0   
+
+
+percorso: RDL
+Next move>T
+
+-----------------------------
+At start of cycle 16 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  . x 0 
+   0      0      0   
+
+
+percorso: RD
+Next move>T
+
+-----------------------------
+At start of cycle 17 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  0 x 0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+
+percorso: R
+Next move>T
+
+-----------------------------
+At start of cycle 18 matrix is:
+   0      0      0   
+ 0   .  0   0  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  . x .  0   0 
+   0      .      0   
+
+   .      .      0   
+ 0   0  0   0  .   0 
+   0      0      0   
+
+restoring state centered in 1 1
+percorso: 
+Next move>D to 2,1
+
+-----------------------------
+At start of cycle 19 matrix is:
+   0      0      0   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      0      0   
+ 0   0  . x .  .   0 
+   0      0      0   
+
+saving state centered in 2 1
+restoring state centered in 2 1
+percorso: D
+Next move>L to 2,0
+
+-----------------------------
+At start of cycle 20 matrix is:
+   0      0      0   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      0      0   
+ 0 x 0  .   .  .   0 
+   0      0      0   
+
+saving state centered in 2 0
+restoring state centered in 2 0
+percorso: DL
+Next move>U to 1,0
+
+-----------------------------
+At start of cycle 21 matrix is:
+   0      0      0   
+ 0   .  .   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  0   .  .   0 
+   0      0      0   
+
+saving state centered in 1 0
+restoring state centered in 1 0
+percorso: DLU
+Next move>U to 0,0
+
+-----------------------------
+At start of cycle 22 matrix is:
+   0      0      0   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  0   .  .   0 
+   0      0      0   
+
+saving state centered in 0 0
+restoring state centered in 0 0
+percorso: DLUU
+Next move>R to 0,1
+
+-----------------------------
+At start of cycle 23 matrix is:
+   0      0      0   
+ 0 x .  0   .  .   0 
+   0      .      .   
+
+   0      .      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  0   .  .   0 
+   0      0      0   
+
+
+percorso: DLUU
+Next move>T
+
+-----------------------------
+At start of cycle 24 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   0      .      .   
+
+   0      .      .   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  0   .  .   0 
+   0      0      0   
+
+restoring state centered in 1 0
+percorso: DLU
+Next move>R to 1,1
+------found a path, time to implement stopping logic
+
+
+-----------------------------
+At start of cycle 25 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  0   .  .   0 
+   0      0      0   
+
+
+percorso: DLU
+Next move>T
+
+-----------------------------
+At start of cycle 26 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0 x 0  0   .  .   0 
+   0      0      0   
+
+
+percorso: DL
+Next move>T
+
+-----------------------------
+At start of cycle 27 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  0 x .  .   0 
+   0      0      0   
+
+restoring state centered in 2 1
+percorso: D
+Next move>R to 2,2
+
+-----------------------------
+At start of cycle 28 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  .   .  0 x 0 
+   0      0      0   
+
+
+percorso: DR
+Next move>T
+
+-----------------------------
+At start of cycle 29 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      .      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      0      0   
+ 0   0  . x .  0   0 
+   0      0      0   
+
+restoring state centered in 2 1
+percorso: D
+Next move>L to 2,0
+
+-----------------------------
+At start of cycle 30 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      0      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0 x 0  .   .  .   0 
+   .      .      .   
+
+saving state centered in 2 0
+restoring state centered in 2 0
+percorso: DL
+Next move>U to 1,0
+
+-----------------------------
+At start of cycle 31 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      0      .   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   0  0   .  .   0 
+   .      .      .   
+
+saving state centered in 1 0
+restoring state centered in 1 0
+percorso: DLU
+Next move>U to 0,0
+
+-----------------------------
+At start of cycle 32 matrix is:
+   0      0      0   
+ 0 x .  0   .  .   0 
+   0      .      .   
+
+   .      0      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   0  0   .  .   0 
+   .      .      .   
+
+saving state centered in 0 0
+restoring state centered in 0 0
+percorso: DLUU
+Next move>R to 0,1
+
+-----------------------------
+At start of cycle 33 matrix is:
+   0      0      0   
+ 0 x .  0   .  .   0 
+   0      .      .   
+
+   0      0      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   0  0   .  .   0 
+   0      .      .   
+
+
+percorso: DLUU
+Next move>T
+
+-----------------------------
+At start of cycle 34 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   0      .      .   
+
+   0      0      .   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   0  0   .  .   0 
+   0      .      .   
+
+restoring state centered in 1 0
+percorso: DLU
+Next move>R to 1,1
+------found a path, time to implement stopping logic
+
+
+-----------------------------
+At start of cycle 35 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      0      .   
+ 0 x .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0   0  0   .  .   0 
+   .      .      .   
+
+
+percorso: DLU
+Next move>T
+
+-----------------------------
+At start of cycle 36 matrix is:
+   0      0      0   
+ 0   .  0   .  .   0 
+   .      .      .   
+
+   .      0      .   
+ 0   .  .   .  .   0 
+   0      .      .   
+
+   .      .      .   
+ 0 x 0  0   .  .   0 
+   .      .      .   
+
+restoring state centered in 2 0
