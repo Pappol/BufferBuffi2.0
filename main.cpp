@@ -634,50 +634,60 @@ void rettangoloni(){
   rc start=blacks[0];
   rc pos=start;
   cout<<"start: "<<pos.first<<" "<<pos.second<<endl;
+  bool nearWhite = true;
+  
   do{
+    nearWhite = true;
+    cout<<">"<<pos.first<<" "<<pos.second<<endl;
     if(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1){
+      cout<<"-R-"<<endl;
       pos=whileRight(pos);
       matrix[pos.first][pos.second].L=false;
       }else{
         if(matrix[pos.first][pos.second].L && matrix[pos.first][pos.second-1].type==1){
-        pos=whileLeft(pos);
-        matrix[pos.first][pos.second].R=false;
+          cout<<"-L-"<<endl;
+          pos=whileLeft(pos);
+          matrix[pos.first][pos.second].R=false;
         }else{
           if(matrix[pos.first][pos.second].U && matrix[pos.first-1][pos.second].type==1){
-          pos=whileUp(pos);
-          matrix[pos.first][pos.second].D=false;
+            cout<<"-U-"<<endl;
+            pos=whileUp(pos);
+            matrix[pos.first][pos.second].D=false;
           }else{
             if(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1){
-            pos=whileDown(pos);
-            matrix[pos.first][pos.second].U=false;
+              cout<<"-D-"<<endl;
+              pos=whileDown(pos);
+              matrix[pos.first][pos.second].U=false;
+          }else{
+            cout<<"NON CI SONO BIANCHI VICINI";
+            nearWhite = false;
           }
         }
       } 
     }
+
     
-    if( !(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1) && 
+    
+    if( !nearWhite
+      /*!(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1) && 
         !(matrix[pos.first][pos.second].L && matrix[pos.first][pos.second-1].type==1) && 
         !(matrix[pos.first][pos.second].U && matrix[pos.first-1][pos.second].type==1) && 
-        !(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1) ){
-      cout<<" - NESSUN W VICINO - " <<endl;
+        !(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1)*/ ){
       char m = moves[moves.length()-1];
-      cout<< m <<endl;
+      cout<<"last move: "<< m <<endl;
       if(m == 'R' || m == 'L'){
-          cout<<" D or U";
           if (checkDown(pos)){
-            cout<<" D ";
-            whileDown(pos);
+            pos = whileDown(pos);
           } else if (checkUp(pos)){
-            cout<<"  ";
-            whileUp(pos);
+            pos = whileUp(pos);
           }
-      } else if(m == 'U' || m == 'D'){
-          cout<<" D or U";
-          if (checkDown(pos)) whileDown(pos);
-          else if (checkUp(pos)) whileUp(pos);
+      }
+      if(m == 'U' || m == 'D'){
+          if (checkRight(pos)) pos = whileRight(pos);
+          else if (checkLeft(pos)) pos = whileLeft(pos);
       }
     }
-  cout<<nmoves<<" > "<<moves<<endl;
+  cout<<" > "<<moves<<endl;
   }while(pos != start);
   
 }
@@ -688,7 +698,7 @@ bool checkRight(rc pos){
     tmp.second++;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.second < m-1);
 
-  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0) return true;
   else return false;
 }
 
@@ -698,7 +708,7 @@ bool checkLeft(rc pos){
     tmp.second--;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.second > 0);
 
-  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0) return true;
   else return false;
 }
 
@@ -708,7 +718,7 @@ bool checkUp(rc pos){
     tmp.first--;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first > 0);
 
-  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0) return true;
   else return false;
 }
 
@@ -718,25 +728,28 @@ bool checkDown(rc pos){
     tmp.first++;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first < n-1);
 
-  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0) return true;
   else return false;
 }
 
+
 rc whileRight(rc pos){
-  if(pos.second < m){
+  if(pos.second < m && matrix[pos.first][pos.second].type == 2){
     pos.second++;
     mossa("R",pos);
   }
   do{
     pos.second++;
     mossa("R",pos);
-  }while(matrix[pos.first][pos.second].type == 0 && pos.second < m);
+  }while(matrix[pos.first][pos.second].type == 0 && pos.second < m-1);
 
-  if(matrix[pos.first][pos.second].type == 2)
+  if(matrix[pos.first][pos.second].type == 2){
+    matrix[pos.first][pos.second].L = false;
     return pos;
+  }
   if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first][pos.second+1].type == 2){
-    
     pos.second++;
+    matrix[pos.first][pos.second].L = false;
     mossa("R",pos);
     return pos;
   }
@@ -768,35 +781,31 @@ rc whileRight(rc pos){
 }
 
 rc whileLeft(rc pos){
-  if(pos.second > 0){
+  if(pos.second > 0 && matrix[pos.first][pos.second].type == 2){
     pos.second--;
     mossa("L",pos);
-    cout<<"- 1mossa -";
   }
   do{
     pos.second--;
     mossa("L",pos);
-    cout<<"- MOSSSSA -";
   }while(matrix[pos.first][pos.second].type == 0 && pos.second > 0);
 
   if(matrix[pos.first][pos.second].type == 2){
-    cout<<"- BLACK -";
+    matrix[pos.first][pos.second].R = false;
     return pos;
   }
 
   if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first][pos.second-1].type == 2){
-    cout<<"- WHITE & BLACK -";
     pos.second--;
+    matrix[pos.first][pos.second].R = false;
     mossa("L",pos);
     return pos;
   }
   if(matrix[pos.first][pos.second].type == 1){
     if(matrix[pos.first][pos.second-1].type == 1){
-      cout<<"- WHITE & WHITE -";
       return pos;
     }
     if(matrix[pos.first-1][pos.second-2].type == 1 ){
-      cout<<"- S1 -";
       pos.second--;
       mossa("L", pos);
       pos.first--;
@@ -806,7 +815,6 @@ rc whileLeft(rc pos){
       return whileLeft(pos); 
     }else{
       if(matrix[pos.first+1][pos.second-2].type == 1 ){
-        cout<<"- S2-";
         pos.second--;
         mossa("L", pos);
         pos.first++;
@@ -821,20 +829,23 @@ rc whileLeft(rc pos){
 }
 
 rc whileUp(rc pos){
-  if(pos.first > 0){
+  if(pos.first > 0 && matrix[pos.first][pos.second].type == 2){
     pos.first--;
     mossa("U",pos);
   }
   do{
     pos.first--;
     mossa("U",pos);
-  }while(matrix[pos.first][pos.second].type == 0 && pos.second > 0);
+  }while(matrix[pos.first][pos.second].type == 0 && pos.first > 0);
 
-  if(matrix[pos.first][pos.second].type == 2)
+  if(matrix[pos.first][pos.second].type == 2){
+    matrix[pos.first][pos.second].D = false;
     return pos;
+  }
 
   if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first-1][pos.second].type == 2){
     pos.first--;
+    matrix[pos.first][pos.second].D = false;
     mossa("U",pos);
     return pos;
   }
@@ -867,20 +878,23 @@ rc whileUp(rc pos){
 }
 
 rc whileDown(rc pos){
-  if(pos.second < n){
+  if(pos.second < n && matrix[pos.first][pos.second].type == 2){
     pos.first++;
     mossa("D",pos);
   }
   do{
     pos.first++;
     mossa("D",pos);
-  }while(matrix[pos.first][pos.second].type == 0 && pos.second < n);
+  }while(matrix[pos.first][pos.second].type == 0 && pos.first < n-1);
   
-  if(matrix[pos.first][pos.second].type == 2)
+  if(matrix[pos.first][pos.second].type == 2){
+    matrix[pos.first][pos.second].U = false;
     return pos;
+  }
 
   if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first+1][pos.second].type == 2){
     pos.first++;
+    matrix[pos.first][pos.second].U = false;
     mossa("D",pos);
     return pos;
   }
