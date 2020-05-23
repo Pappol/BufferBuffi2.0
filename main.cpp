@@ -24,6 +24,10 @@ vector<rc> blacks, whites;
 ofstream out("output.txt");
 ifstream in("input.txt");
 stack<bitset<24>> states;
+string moves;
+int nmoves=0;
+int rings=0;
+
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -52,6 +56,17 @@ void saveState(rc currentCell);
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
 void restoreState(bitset<24> state, rc centralCell);
+
+//controlla se ci sono soltanto gruppi da tre per i neri
+bool checkTry();
+
+//soluzione per rettangoloni
+void rettangoloni();
+rc whileRight(rc pos);
+rc whileLeft(rc pos);
+rc whileUp(rc pos);
+rc whileDown(rc pos);
+void mossa(string dir,rc pos);
 
 int main(int argc, char **argv) {
   int B, W;
@@ -87,11 +102,15 @@ int main(int argc, char **argv) {
     if (checkForRectangles() == B + W)
       return 0;
   }
+
+  //rettangoloni
+  rettangoloni();
+  out<<rings<<" "<<nmoves<<" "<<blacks[0].first<<" "<<blacks[0].second<<" "<<moves<<"#"<<endl;
   // Placing the walls
-  placeWalls();
+  //placeWalls();
 
   // Go
-  solve();
+  //solve();
 
   // Will probably never get here, such a waste
   out.close();
@@ -561,4 +580,122 @@ void restoreState(bitset<24> state, rc center) {
     if (center.second + 2 < m)
       matrix[center.first][center.second + 2].R = state[23];
   }
+}
+
+bool checkTry(){
+  for(rc b:blacks){
+
+    if(b.first==0){
+      if(b.second==0){
+        if(matrix[b.first+1][b.second].type!=1 && matrix[b.first][b.second+1].type!=1)
+      return false;
+      }else if(b.second==n){
+        if(matrix[b.first+1][b.second].type!=1 && matrix[b.first][b.second-1].type!=1)
+      return false;
+      }else{
+        if(matrix[b.first+1][b.second].type!=1 && (matrix[b.first][b.second-1].type!=1 || matrix[b.first][b.second+1].type!=1))
+        return false;
+      }
+    }else if(b.first==m){
+      if(b.second==0){
+        if(matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second+1].type!=1)
+      return false;
+      }else if(b.second==n){
+        if(matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second-1].type!=1)
+      return false;
+      }else{
+        if(matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second+1].type!=1 || 
+          matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second-1].type!=1)
+        return false;
+      }
+    }else if(b.second==0){
+      if(matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second+1].type!=1 || 
+        matrix[b.first+1][b.second].type!=1 && matrix[b.first][b.second-1].type!=1)
+      return false;
+    }else{
+      if(matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second+1].type!=1 || 
+        matrix[b.first-1][b.second].type!=1 && matrix[b.first][b.second-1].type!=1 ||
+        matrix[b.first+1][b.second].type!=1 && matrix[b.first][b.second-1].type!=1 ||
+        matrix[b.first+1][b.second].type!=1 && matrix[b.first][b.second+1].type!=1)
+      return false;
+    }
+    
+  }
+  return true;
+}
+
+void rettangoloni(){
+  rc start=blacks[0];
+  rc pos=start;
+  do{
+    if(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1){
+      pos=whileRight(pos);
+      matrix[pos.first][pos.second].L=false;
+      }else{
+        if(matrix[pos.first][pos.second].L && matrix[pos.first][pos.second-1].type==1){
+        pos=whileLeft(pos);
+        matrix[pos.first][pos.second].R=false;
+        }else{
+          if(matrix[pos.first][pos.second].U && matrix[pos.first-1][pos.second].type==1){
+          pos=whileUp(pos);
+          matrix[pos.first][pos.second].D=false;
+          }else{
+            if(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1){
+            pos=whileDown(pos);
+            matrix[pos.first][pos.second].U=false;
+          }
+        }
+      } 
+    }
+  }while(pos!=start);
+  
+}
+
+rc whileRight(rc pos){
+  pos.second++;
+  mossa("R",pos);
+  do{
+    pos.second++;
+    mossa("R",pos);
+  }while(matrix[pos.first][pos.second].type!=2);
+  return pos;
+}
+
+rc whileLeft(rc pos){
+  pos.second--;
+  mossa("L",pos);
+  do{
+    pos.second--;
+    mossa("L",pos);
+  }while(matrix[pos.first][pos.second].type!=2);
+  return pos;
+}
+
+rc whileUp(rc pos){
+  pos.first--;
+  mossa("U",pos);
+  do{
+    pos.first--;
+    mossa("U",pos);
+  }while(matrix[pos.first][pos.second].type!=2);
+  return pos;
+}
+
+
+rc whileDown(rc pos){
+  pos.first++;
+  mossa("D",pos);
+  do{
+    pos.first++;
+    mossa("D",pos);
+  }while(matrix[pos.first][pos.second].type!=2);
+  return pos;
+}
+
+
+void mossa(string dir,rc pos){
+  if(matrix[pos.first][pos.second].type!=0)rings++;
+  cout<<dir;
+  moves.append(dir);
+  nmoves++;
 }
