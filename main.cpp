@@ -328,25 +328,25 @@ void solve() {
   // meaningless while going back!
   bool inNewCell = true;
   cout << currentCell.first << " " << currentCell.second << endl;
+  stackCelle.push(currentCell);
   do {
+    currentCell = stackCelle.top();
     if (inNewCell) {
       saveState(currentCell);
-      stackCelle.push(currentCell);
       inNewCell = false;
     }
-    currentCell = stackCelle.top();
     rc nextCell = rc(currentCell.first, currentCell.second);
     // Direzione in cui da current arrivo a next
     char dir;
     { // get next direction from the queue and initialize nextCell
       dir = mosseDaFare.top();
       mosseDaFare.pop();
+      cout << dir << " ";
       if (dir == 'T') {
-        states.pop();
         stackCelle.pop();
+        states.pop();
         continue;
       } else {
-        cout << dir;
         restoreState(states.top(), currentCell);
       }
       { // initialize nextCell to correct value
@@ -364,6 +364,33 @@ void solve() {
           nextCell.second++;
           break;
         }
+      }
+      { // check for solution
+        if (nextCell.first == start.first && nextCell.second == start.second) {
+          int anelliAttraversati = 0;
+          // TODO calcola numero anelliAttraversati
+          cout << "\n------found a path, time to implement stopping logic\n";
+          float frazioneAnelliAttraversata =
+              (float)anelliAttraversati / bestPossible;
+          if (frazioneAnelliAttraversata - bestFound > 0.1) {
+            // TODO print solution on out
+            bestFound = frazioneAnelliAttraversata;
+          }
+          continue; // Like if this was a wrong path
+        }
+      }
+    }
+    { // put lateral walls in current cell to avoid intersecamenti strani
+      if (dir == 'U' || dir == 'D') {
+        matrix[currentCell.first][currentCell.second].L = false;
+        matrix[currentCell.first][currentCell.second].R = false;
+        wallIfPossible(currentCell.first, currentCell.second - 1, 'R');
+        wallIfPossible(currentCell.first, currentCell.second + 1, 'L');
+      } else {
+        matrix[currentCell.first][currentCell.second].U = false;
+        matrix[currentCell.first][currentCell.second].D = false;
+        wallIfPossible(currentCell.first - 1, currentCell.second, 'D');
+        wallIfPossible(currentCell.first + 1, currentCell.second, 'U');
       }
     }
     { // prevent going backwards
@@ -466,22 +493,14 @@ void solve() {
     else
       mosseDaFare.pop();
 
-    if (nextCell.first == start.first && nextCell.second == start.second) {
-      int anelliAttraversati;
-      // TODO calcola numero anelliAttraversati
-      cout << "found a path, time to implement stopping logic";
-      float frazioneAnelliAttraversata =
-          (float)anelliAttraversati / bestPossible;
-      if (frazioneAnelliAttraversata - bestFound > 0.1) {
-        // TODO print solution on out
-        bestFound = frazioneAnelliAttraversata;
-      }
-    }
     previousMove = dir;
+    stackCelle.push(nextCell);
   } while (bestFound < 1 || mosseDaFare.empty());
 }
 
 void saveState(rc currentCell) {
+  cout << "saving state of cell " << currentCell.first << " "
+       << currentCell.second << endl;
   bitset<24> state = bitset<24>();
   state[0] = matrix[currentCell.first][currentCell.second].U;
   state[1] = matrix[currentCell.first][currentCell.second].L;
@@ -527,6 +546,8 @@ void saveState(rc currentCell) {
 }
 
 void restoreState(bitset<24> state, rc center) {
+  cout << "restoring state of cell " << center.first << " " << center.second
+       << endl;
   matrix[center.first][center.second].U = state[0];
   matrix[center.first][center.second].L = state[1];
   matrix[center.first][center.second].D = state[2];
