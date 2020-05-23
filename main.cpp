@@ -61,6 +61,12 @@ void restoreState(bitset<24> state, rc centralCell);
 bool checkTry();
 
 //soluzione per rettangoloni
+
+bool checkRight(rc pos);
+bool checkLeft(rc pos);
+bool checkUp(rc pos);
+bool checkDown(rc pos);
+
 void rettangoloni();
 rc whileRight(rc pos);
 rc whileLeft(rc pos);
@@ -627,6 +633,7 @@ bool checkTry(){
 void rettangoloni(){
   rc start=blacks[0];
   rc pos=start;
+  cout<<"start: "<<pos.first<<" "<<pos.second<<endl;
   do{
     if(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1){
       pos=whileRight(pos);
@@ -647,55 +654,269 @@ void rettangoloni(){
         }
       } 
     }
-  }while(pos!=start);
+    
+    if( !(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1) && 
+        !(matrix[pos.first][pos.second].L && matrix[pos.first][pos.second-1].type==1) && 
+        !(matrix[pos.first][pos.second].U && matrix[pos.first-1][pos.second].type==1) && 
+        !(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1) ){
+      cout<<" - NESSUN W VICINO - " <<endl;
+      char m = moves[moves.length()-1];
+      cout<< m <<endl;
+      if(m == 'R' || m == 'L'){
+          cout<<" D or U";
+          if (checkDown(pos)){
+            cout<<" D ";
+            whileDown(pos);
+          } else if (checkUp(pos)){
+            cout<<"  ";
+            whileUp(pos);
+          }
+      } else if(m == 'U' || m == 'D'){
+          cout<<" D or U";
+          if (checkDown(pos)) whileDown(pos);
+          else if (checkUp(pos)) whileUp(pos);
+      }
+    }
+  cout<<nmoves<<" > "<<moves<<endl;
+  }while(pos != start);
   
 }
 
+bool checkRight(rc pos){
+  rc tmp = pos;
+  do{
+    tmp.second++;
+  }while(matrix[tmp.first][tmp.second].type == 0 && tmp.second < m-1);
+
+  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  else return false;
+}
+
+bool checkLeft(rc pos){
+  rc tmp = pos;
+  do{
+    tmp.second--;
+  }while(matrix[tmp.first][tmp.second].type == 0 && tmp.second > 0);
+
+  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  else return false;
+}
+
+bool checkUp(rc pos){
+  rc tmp = pos;
+  do{
+    tmp.first--;
+  }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first > 0);
+
+  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  else return false;
+}
+
+bool checkDown(rc pos){
+  rc tmp = pos;
+  do{
+    tmp.first++;
+  }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first < n-1);
+
+  if(matrix[tmp.first][tmp.second].type == 0) return true;
+  else return false;
+}
+
 rc whileRight(rc pos){
-  pos.second++;
-  mossa("R",pos);
+  if(pos.second < m){
+    pos.second++;
+    mossa("R",pos);
+  }
   do{
     pos.second++;
     mossa("R",pos);
-  }while(matrix[pos.first][pos.second].type!=2);
-  return pos;
+  }while(matrix[pos.first][pos.second].type == 0 && pos.second < m);
+
+  if(matrix[pos.first][pos.second].type == 2)
+    return pos;
+  if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first][pos.second+1].type == 2){
+    
+    pos.second++;
+    mossa("R",pos);
+    return pos;
+  }
+
+  if(matrix[pos.first][pos.second].type == 1){
+    if(matrix[pos.first][pos.second+1].type == 1){
+      return pos;
+    }
+    if(matrix[pos.first-1][pos.second+2].type == 1 ){
+      pos.second++;
+      mossa("R", pos);
+      pos.first--;
+      mossa("U",pos);
+      pos.second++;
+      mossa("R", pos);
+      return whileRight(pos); 
+    }else{
+      if(matrix[pos.first+1][pos.second+2].type == 1 ){
+        pos.second++;
+        mossa("R", pos);
+        pos.first++;
+        mossa("D",pos);
+        pos.second++;
+        mossa("R", pos);
+        return whileRight(pos); 
+      }
+    }
+  }
 }
 
 rc whileLeft(rc pos){
-  pos.second--;
-  mossa("L",pos);
+  if(pos.second > 0){
+    pos.second--;
+    mossa("L",pos);
+    cout<<"- 1mossa -";
+  }
   do{
     pos.second--;
     mossa("L",pos);
-  }while(matrix[pos.first][pos.second].type!=2);
+    cout<<"- MOSSSSA -";
+  }while(matrix[pos.first][pos.second].type == 0 && pos.second > 0);
+
+  if(matrix[pos.first][pos.second].type == 2){
+    cout<<"- BLACK -";
+    return pos;
+  }
+
+  if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first][pos.second-1].type == 2){
+    cout<<"- WHITE & BLACK -";
+    pos.second--;
+    mossa("L",pos);
+    return pos;
+  }
+  if(matrix[pos.first][pos.second].type == 1){
+    if(matrix[pos.first][pos.second-1].type == 1){
+      cout<<"- WHITE & WHITE -";
+      return pos;
+    }
+    if(matrix[pos.first-1][pos.second-2].type == 1 ){
+      cout<<"- S1 -";
+      pos.second--;
+      mossa("L", pos);
+      pos.first--;
+      mossa("U",pos);
+      pos.second--;
+      mossa("L", pos);
+      return whileLeft(pos); 
+    }else{
+      if(matrix[pos.first+1][pos.second-2].type == 1 ){
+        cout<<"- S2-";
+        pos.second--;
+        mossa("L", pos);
+        pos.first++;
+        mossa("D",pos);
+        pos.second--;
+        mossa("L", pos);
+        return whileLeft(pos); 
+      }
+    }
+  }
   return pos;
 }
 
 rc whileUp(rc pos){
-  pos.first--;
-  mossa("U",pos);
+  if(pos.first > 0){
+    pos.first--;
+    mossa("U",pos);
+  }
   do{
     pos.first--;
     mossa("U",pos);
-  }while(matrix[pos.first][pos.second].type!=2);
+  }while(matrix[pos.first][pos.second].type == 0 && pos.second > 0);
+
+  if(matrix[pos.first][pos.second].type == 2)
+    return pos;
+
+  if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first-1][pos.second].type == 2){
+    pos.first--;
+    mossa("U",pos);
+    return pos;
+  }
+
+  if(matrix[pos.first][pos.second].type == 1){
+    if(matrix[pos.first-1][pos.second].type == 1){
+      return pos;
+    }
+    if(matrix[pos.first-2][pos.second+1].type == 1 ){
+      pos.first--;
+      mossa("U",pos);
+      pos.second++;
+      mossa("R", pos);
+      pos.first--;
+      mossa("U",pos);
+      return whileUp(pos); 
+    }else{
+      if(matrix[pos.first-2][pos.second-1].type == 1 ){
+        pos.first--;
+        mossa("U",pos);
+        pos.second--;
+        mossa("L", pos);
+        pos.first--;
+        mossa("U",pos);
+        return whileUp(pos);  
+      }
+    }
+  }
   return pos;
 }
 
-
 rc whileDown(rc pos){
-  pos.first++;
-  mossa("D",pos);
+  if(pos.second < n){
+    pos.first++;
+    mossa("D",pos);
+  }
   do{
     pos.first++;
     mossa("D",pos);
-  }while(matrix[pos.first][pos.second].type!=2);
+  }while(matrix[pos.first][pos.second].type == 0 && pos.second < n);
+  
+  if(matrix[pos.first][pos.second].type == 2)
+    return pos;
+
+  if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first+1][pos.second].type == 2){
+    pos.first++;
+    mossa("D",pos);
+    return pos;
+  }
+
+  if(matrix[pos.first][pos.second].type == 1){
+    if(matrix[pos.first-1][pos.second].type == 1){
+      return pos;
+    }
+    if(matrix[pos.first+2][pos.second+1].type == 1 ){
+      pos.first++;
+      mossa("D",pos);
+      pos.second++;
+      mossa("R", pos);
+      pos.first++;
+      mossa("D",pos);
+      return whileDown(pos); 
+    }else{
+      if(matrix[pos.first+2][pos.second-1].type == 1 ){
+        pos.first++;
+        mossa("D",pos);
+        pos.second--;
+        mossa("L", pos);
+        pos.first++;
+        mossa("D",pos);
+        return whileDown(pos);  
+      }
+    }
+  }
   return pos;
 }
 
 
 void mossa(string dir,rc pos){
   if(matrix[pos.first][pos.second].type!=0)rings++;
-  cout<<dir;
+  //cout << dir;
+
   moves.append(dir);
   nmoves++;
 }
