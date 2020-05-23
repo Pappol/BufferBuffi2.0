@@ -52,6 +52,7 @@ void saveState(rc currentCell);
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
 void restoreState(bitset<24> state, rc centralCell);
+void stampaPercorso(stack<rc> original);
 
 int main(int argc, char **argv) {
   int B, W;
@@ -331,6 +332,7 @@ void solve() {
   stackCelle.push(currentCell);
   do {
     currentCell = stackCelle.top();
+    stampaPercorso(stackCelle);
     if (inNewCell) {
       saveState(currentCell);
       inNewCell = false;
@@ -341,7 +343,6 @@ void solve() {
     { // get next direction from the queue and initialize nextCell
       dir = mosseDaFare.top();
       mosseDaFare.pop();
-      cout << dir << " ";
       if (dir == 'T') {
         stackCelle.pop();
         states.pop();
@@ -369,7 +370,7 @@ void solve() {
         if (nextCell.first == start.first && nextCell.second == start.second) {
           int anelliAttraversati = 0;
           // TODO calcola numero anelliAttraversati
-          cout << "\n------found a path, time to implement stopping logic\n";
+          cout << "------found a path, time to implement stopping logic\n";
           float frazioneAnelliAttraversata =
               (float)anelliAttraversati / bestPossible;
           if (frazioneAnelliAttraversata - bestFound > 0.1) {
@@ -379,18 +380,24 @@ void solve() {
           continue; // Like if this was a wrong path
         }
       }
+      // cout << "going from " << currentCell.first << " " << currentCell.second
+      //      << " to " << nextCell.first << " " << nextCell.second
+      //      << " with direction " << dir << endl;
     }
     { // put lateral walls in current cell to avoid intersecamenti strani
-      if (dir == 'U' || dir == 'D') {
-        matrix[currentCell.first][currentCell.second].L = false;
-        matrix[currentCell.first][currentCell.second].R = false;
-        wallIfPossible(currentCell.first, currentCell.second - 1, 'R');
-        wallIfPossible(currentCell.first, currentCell.second + 1, 'L');
-      } else {
-        matrix[currentCell.first][currentCell.second].U = false;
-        matrix[currentCell.first][currentCell.second].D = false;
-        wallIfPossible(currentCell.first - 1, currentCell.second, 'D');
-        wallIfPossible(currentCell.first + 1, currentCell.second, 'U');
+      if (currentCell.first != start.first &&
+          currentCell.second != start.second) {
+        if (dir == 'U' || dir == 'D') {
+          matrix[currentCell.first][currentCell.second].L = false;
+          matrix[currentCell.first][currentCell.second].R = false;
+          wallIfPossible(currentCell.first, currentCell.second - 1, 'R');
+          wallIfPossible(currentCell.first, currentCell.second + 1, 'L');
+        } else {
+          matrix[currentCell.first][currentCell.second].U = false;
+          matrix[currentCell.first][currentCell.second].D = false;
+          wallIfPossible(currentCell.first - 1, currentCell.second, 'D');
+          wallIfPossible(currentCell.first + 1, currentCell.second, 'U');
+        }
       }
     }
     { // prevent going backwards
@@ -452,7 +459,10 @@ void solve() {
     }
     case NERO: {
       if (previousMove != dir) // Must arrive w/ straight path
+      {
+        mosseDaFare.pop();
         continue;
+      }
       mustGoStraight = true;
       bool hasPushedMoreMoves = false;
       wallIfPossible(nextCell.first, nextCell.second, dir); // must turn
@@ -499,8 +509,8 @@ void solve() {
 }
 
 void saveState(rc currentCell) {
-  cout << "saving state of cell " << currentCell.first << " "
-       << currentCell.second << endl;
+  // cout << "saving state of cell " << currentCell.first << " "
+  //      << currentCell.second << endl;
   bitset<24> state = bitset<24>();
   state[0] = matrix[currentCell.first][currentCell.second].U;
   state[1] = matrix[currentCell.first][currentCell.second].L;
@@ -546,8 +556,8 @@ void saveState(rc currentCell) {
 }
 
 void restoreState(bitset<24> state, rc center) {
-  cout << "restoring state of cell " << center.first << " " << center.second
-       << endl;
+  // cout << "restoring state of cell " << center.first << " " << center.second
+  //      << endl;
   matrix[center.first][center.second].U = state[0];
   matrix[center.first][center.second].L = state[1];
   matrix[center.first][center.second].D = state[2];
@@ -588,4 +598,32 @@ void restoreState(bitset<24> state, rc center) {
     if (center.second + 2 < m)
       matrix[center.first][center.second + 2].R = state[23];
   }
+}
+
+void stampaPercorso(stack<rc> original) {
+  stack<rc> inverted = stack<rc>();
+  int orSize = original.size();
+  stringbuf sb = stringbuf();
+  for (int i = orSize; i > 0; i--) {
+    inverted.push(original.top());
+    original.pop();
+  }
+  rc current = inverted.top();
+  inverted.pop();
+  for (int i = 1; i < orSize; i++) {
+    rc newRc = inverted.top();
+    if (newRc.first == current.first) {
+      if (newRc.second - 1 == current.second) {
+        sb.sputc('R');
+      } else
+        sb.sputc('L');
+    } else if (newRc.first - 1 == current.first) {
+      sb.sputc('D');
+    } else
+      sb.sputc('U');
+    original.push(newRc);
+    inverted.pop();
+    current = newRc;
+  }
+  cout << "percorso: " << sb.str() << endl;
 }
