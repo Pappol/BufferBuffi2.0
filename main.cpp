@@ -52,7 +52,7 @@ void saveState(rc currentCell);
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
 void restoreState(bitset<24> state, rc centralCell);
-void stampaPercorso(stack<rc> original);
+void stampaPercorso(stack<rc> original, char prossimaMossa);
 
 int main(int argc, char **argv) {
   int B, W;
@@ -332,7 +332,7 @@ void solve() {
   stackCelle.push(currentCell);
   do {
     currentCell = stackCelle.top();
-    stampaPercorso(stackCelle);
+    stampaPercorso(stackCelle, mosseDaFare.top());
     if (inNewCell) {
       saveState(currentCell);
       inNewCell = false;
@@ -366,11 +366,12 @@ void solve() {
           break;
         }
       }
+      cout << " to " << nextCell.first << "," << nextCell.second;
       { // check for solution
         if (nextCell.first == start.first && nextCell.second == start.second) {
           int anelliAttraversati = 0;
           // TODO calcola numero anelliAttraversati
-          cout << "------found a path, time to implement stopping logic\n";
+          cout << "\n------found a path, time to implement stopping logic\n";
           float frazioneAnelliAttraversata =
               (float)anelliAttraversati / bestPossible;
           if (frazioneAnelliAttraversata - bestFound > 0.1) {
@@ -600,7 +601,7 @@ void restoreState(bitset<24> state, rc center) {
   }
 }
 
-void stampaPercorso(stack<rc> original) {
+void stampaPercorso(stack<rc> original, char prossimaMossa) {
   stack<rc> inverted = stack<rc>();
   int orSize = original.size();
   stringbuf sb = stringbuf();
@@ -625,5 +626,5 @@ void stampaPercorso(stack<rc> original) {
     inverted.pop();
     current = newRc;
   }
-  cout << "percorso: " << sb.str() << endl;
+  cout << endl << "percorso: " << sb.str() << " Next move>" << prossimaMossa;
 }
