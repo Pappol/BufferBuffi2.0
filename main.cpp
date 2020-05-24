@@ -57,6 +57,8 @@ void restoreState(pair<rc, bitset<24>> state, rc centralCell);
 void stampaPercorso(stack<rc> original, char prossimaMossa);
 void stampaStatoMatrice(rc cell, int numciclo);
 void stampaStackCelle(stack<rc> stackCelle);
+void stampaMosseDaFare(stack<char> mosseDaFare);
+void stampaStackStati(stack<pair<rc, bitset<24>>> stati);
 
 int main(int argc, char **argv) {
   int B, W;
@@ -350,11 +352,17 @@ void solve() {
   do {
     numciclo++;
     stampaStatoMatrice(stackCelle.top(), numciclo - 1);
+    stampaStackStati(states);
+    stampaStackCelle(stackCelle);
+    stampaPercorso(stackCelle, mosseDaFare.top());
+    stampaMosseDaFare(mosseDaFare);
     currentCell = stackCelle.top();
     if (inNewCell) {
       saveState(currentCell);
       inNewCell = false;
     }
+    // else
+    //   restoreState(states.top(), currentCell);
     rc nextCell = rc(currentCell.first, currentCell.second);
     // Direzione in cui da current arrivo a next
     char dir;
@@ -362,10 +370,7 @@ void solve() {
       dir = mosseDaFare.top();
       mosseDaFare.pop();
       if (dir == 'T') {
-        stampaPercorso(stackCelle, dir);
-        restoreState(states.top(), currentCell);
         out << "\npopping stackCelle from";
-        stampaStackCelle(stackCelle);
         stackCelle.pop();
         out << "to";
         stampaStackCelle(stackCelle);
@@ -373,7 +378,6 @@ void solve() {
         restoreState(states.top(), stackCelle.top());
         continue;
       } else {
-        restoreState(states.top(), currentCell);
         stampaPercorso(stackCelle, dir);
       }
       { // initialize nextCell to correct value
@@ -562,7 +566,7 @@ void saveState(rc currentCell) {
   cout << "saving state centered in " << currentCell.first << " "
        << currentCell.second;
   out << "saving state centered in " << currentCell.first << " "
-      << currentCell.second;
+      << currentCell.second << endl;
   bitset<24> state = bitset<24>();
   state[0] = matrix[currentCell.first][currentCell.second].U;
   state[1] = matrix[currentCell.first][currentCell.second].L;
@@ -696,7 +700,8 @@ void stampaPercorso(stack<rc> original, char prossimaMossa) {
     current = newRc;
   }
   cout << endl << "percorso: " << sb.str() << "\nNext move>" << prossimaMossa;
-  out << endl << "percorso: " << sb.str() << "\nNext move>" << prossimaMossa;
+  out << "percorso finora: " << sb.str() << "\nNext move>" << prossimaMossa
+      << endl;
 }
 
 void stampaStatoMatrice(rc cell, int k) {
@@ -731,15 +736,49 @@ void stampaStatoMatrice(rc cell, int k) {
 }
 
 void stampaStackCelle(stack<rc> stackCelle) {
-  out << endl;
+  out << endl << "stack delle celle: ";
   stack<rc> stackCelle2 = stack<rc>();
   while (!stackCelle.empty()) {
     stackCelle2.push(stackCelle.top());
     stackCelle.pop();
   }
   while (!stackCelle2.empty()) {
-    out << stackCelle2.top().first << "," << stackCelle2.top().second << "-";
+    out << "(" << stackCelle2.top().first << "," << stackCelle2.top().second
+        << ")"
+        << " ";
     stackCelle.push(stackCelle2.top());
     stackCelle2.pop();
   }
+  out << endl;
+}
+
+void stampaStackStati(stack<pair<rc, bitset<24>>> stati) {
+  out << endl << "Stack degli stati: ";
+  stack<pair<rc, bitset<24>>> stackCelle2 = stack<pair<rc, bitset<24>>>();
+  while (!stati.empty()) {
+    stackCelle2.push(stati.top());
+    stati.pop();
+  }
+  while (!stackCelle2.empty()) {
+    out << "(" << stackCelle2.top().first.first << ","
+        << stackCelle2.top().first.second << ")"
+        << " ";
+    stati.push(stackCelle2.top());
+    stackCelle2.pop();
+  }
+}
+
+void stampaMosseDaFare(stack<char> mosseDaFare) {
+  out << "Mosse da provare: ";
+  stack<char> s = stack<char>();
+  while (!mosseDaFare.empty()) {
+    s.push(mosseDaFare.top());
+    mosseDaFare.pop();
+  }
+  while (!s.empty()) {
+    out << s.top();
+    mosseDaFare.push(s.top());
+    s.pop();
+  }
+  out << endl;
 }
