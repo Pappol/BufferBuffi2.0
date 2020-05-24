@@ -55,6 +55,7 @@ void restoreState(pair<rc, bitset<24>> state, rc centralCell);
 
 //-------Debug functions------------
 void stampaPercorso(stack<rc> original, char prossimaMossa);
+int stampaSoluz(stack<rc> original, char prossimaMossa, int numciclo);
 void stampaStatoMatrice(rc cell, int numciclo);
 void stampaStackCelle(stack<rc> stackCelle);
 void stampaMosseDaFare(stack<char> mosseDaFare);
@@ -350,6 +351,9 @@ void solve() {
          "ripristinare lo stato della cella i (e di quella da cui si sta \n"
          "arrivando (se necessario)";
   do {
+    if (numciclo >= 152) {
+      out << "abcQUI";
+    }
     numciclo++;
     stampaStatoMatrice(stackCelle.top(), numciclo - 1);
     stampaStackStati(states);
@@ -361,8 +365,8 @@ void solve() {
       saveState(currentCell);
       inNewCell = false;
     }
-    // else
-    //   restoreState(states.top(), currentCell);
+    else
+      restoreState(states.top(), currentCell);
     rc nextCell = rc(currentCell.first, currentCell.second);
     // Direzione in cui da current arrivo a next
     char dir;
@@ -370,10 +374,14 @@ void solve() {
       dir = mosseDaFare.top();
       mosseDaFare.pop();
       if (dir == 'T') {
+        mustGoStraight=false;
         out << "\npopping stackCelle from";
         stackCelle.pop();
         out << "to";
         stampaStackCelle(stackCelle);
+        states.pop();
+        restoreState(states.top(), stackCelle.top());
+        continue;
         states.pop();
         restoreState(states.top(), stackCelle.top());
         continue;
@@ -400,10 +408,7 @@ void solve() {
       out << " to " << nextCell.first << "," << nextCell.second;
       { // check for solution
         if (nextCell.first == start.first && nextCell.second == start.second) {
-          int anelliAttraversati = 0;
-          // TODO calcola numero anelliAttraversati
-          cout << "\n------found a path, time to implement stopping logic\n";
-          out << "\n------found a path, time to implement stopping logic\n";
+          int anelliAttraversati = stampaSoluz(stackCelle, dir, numciclo);
           float frazioneAnelliAttraversata =
               (float)anelliAttraversati / bestPossible;
           if (frazioneAnelliAttraversata - bestFound > 0.1) {
@@ -553,12 +558,13 @@ void solve() {
     }
     }
     if (stackSizeBefore <
-        mosseDaFare.size()) // If some moves were pushed we are still exploring
+        mosseDaFare
+            .size()) { // If some moves were pushed we are still exploring
       inNewCell = true;
-    else
+      stackCelle.push(nextCell);
+    } else
       mosseDaFare.pop(); // moves were not added, remove eccess T
     previousMove = dir;
-    stackCelle.push(nextCell);
   } while (bestFound < 1 && !mosseDaFare.empty());
 }
 
@@ -781,4 +787,43 @@ void stampaMosseDaFare(stack<char> mosseDaFare) {
     s.pop();
   }
   out << endl;
+}
+
+ofstream out2("output2.txt");
+int stampaSoluz(stack<rc> original, char prossimaMossa, int numciclo) {
+  int anelli = 0;
+  stack<rc> inverted = stack<rc>();
+  int orSize = original.size();
+  stringbuf sb = stringbuf();
+  for (int i = orSize; i > 0; i--) {
+    inverted.push(original.top());
+    original.pop();
+  }
+  rc start = inverted.top();
+  rc current = inverted.top();
+  inverted.pop();
+  for (int i = 1; i < orSize; i++) {
+    rc newRc = inverted.top();
+    if (newRc.first == current.first) {
+      if (newRc.second - 1 == current.second) {
+        sb.sputc('R');
+      } else
+        sb.sputc('L');
+    } else if (newRc.first - 1 == current.first) {
+      sb.sputc('D');
+    } else
+      sb.sputc('U');
+    original.push(newRc);
+    inverted.pop();
+    if (matrix[current.first][current.second].type != 0)
+      anelli++;
+    current = newRc;
+  }
+  sb.sputc(prossimaMossa);
+  cout << endl << "percorso: " << sb.str() << "\nNext move>" << prossimaMossa;
+  out << "percorso finora: " << sb.str() << "\nNext move>" << prossimaMossa
+      << endl;
+  out2 << anelli << " " << sb.str().length() << " " << start.first << " "
+       << start.second << " " << sb.str() << "#" << numciclo << endl;
+  return anelli;
 }
