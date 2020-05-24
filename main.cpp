@@ -43,7 +43,7 @@ bool checkLeft(rc pos);
 bool checkUp(rc pos);
 bool checkDown(rc pos);
 
-void rettangoloni();
+bool rettangoloni();
 rc whileRight(rc pos);
 rc whileLeft(rc pos);
 rc whileUp(rc pos);
@@ -86,7 +86,11 @@ int main(int argc, char **argv) {
   }
 
   //rettangoloni
-  rettangoloni();
+  if(rettangoloni()){
+    cout<<"SOLUZ"<<endl;
+  }else{
+    cout<<"NO SOLUZ"<<endl;
+  }
   out<<rings<<" "<<nmoves<<" "<<blacks[0].first<<" "<<blacks[0].second<<" "<<moves<<"#"<<endl;
   out.close();
   in.close();
@@ -152,7 +156,7 @@ int checkForRectangles() {
   return anelli;
 }
 
-void rettangoloni(){
+bool rettangoloni(){
   rc start;
   int i=0;
   do{
@@ -190,6 +194,7 @@ void rettangoloni(){
       } 
     }
     if( !nearWhite){
+      rc stuck = pos;
       char m = moves[moves.length()-1];
       
       if(m == 'R' || m == 'L'){
@@ -203,10 +208,15 @@ void rettangoloni(){
           if (checkRight(pos)) pos = whileRight(pos);
           else if (checkLeft(pos)) pos = whileLeft(pos);
       }
+      if(pos == stuck){
+      return false;
     }
+    }
+    
+    cout<<"> "<<moves<<endl;
   
   }while(pos != start);
-  
+  return true;
 }
 
 bool checkRight(rc pos){
@@ -241,9 +251,9 @@ bool checkUp(rc pos){
 
 bool checkDown(rc pos){
   rc tmp = pos;
-  do{
+  while(matrix[tmp.first][tmp.second].type == 0 && tmp.first < n-1){
     tmp.first++;
-  }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first < n-1);
+  }
 
   if(matrix[tmp.first][tmp.second].type != 0 && !matrix[tmp.first][tmp.second].vis) return true;
   else return false;
