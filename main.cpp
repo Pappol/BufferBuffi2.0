@@ -1,3 +1,4 @@
+#include "./swrace.h"
 #include <bits/stdc++.h>
 #include <fstream>
 #define VUOTO 0
@@ -23,7 +24,7 @@ ushort n, m;
 vector<rc> blacks, whites;
 ofstream out("output.txt");
 ifstream in("input.txt");
-stack<pair<rc, bitset<24>>> states;
+stack<bitset<24>> states;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -43,21 +44,18 @@ void solve();
 // -false if the wall was already there
 bool wallIfPossible(int row, int column, char directionToWall);
 
-// Sets matrix[row][column] to prevState if possible
-void restoreWall(int row, int column, char dir, bool prevState);
-
 // Saves the state pushing it in the stack
 void saveState(rc currentCell);
 
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
-void restoreState(pair<rc, bitset<24>> state, rc centralCell);
+void restoreState(bitset<24> state, rc centralCell);
 
 //-------Debug functions------------
 void stampaSoluz(stack<rc> original, char prossimaMossa, int anelli);
 int numAnelliSoluz(stack<rc> original, char prossimaMossa);
 
-int main(int argc, char **argv) {
+int main() {
   int B, W;
   // Initialization
   in >> n >> m >> B >> W;
@@ -93,7 +91,6 @@ int main(int argc, char **argv) {
   }
   // Placing the walls
   placeWalls();
-
   // Go
   solve();
 
@@ -279,36 +276,15 @@ bool wallIfPossible(int row, int column, char directionToWall) {
   return prevWallState;
 }
 
-void restoreWall(int row, int column, char dir, bool prevState) {
-  if (row >= 0 && row < n && column >= 0 && column < m)
-    switch (dir) {
-    case 'U':
-      matrix[row][column].U = prevState;
-      break;
-    case 'D':
-      matrix[row][column].D = prevState;
-      break;
-    case 'L':
-      matrix[row][column].L = prevState;
-      break;
-    case 'R':
-      matrix[row][column].R = prevState;
-      break;
-
-    default:
-      perror("invalid direction");
-      exit(1);
-    }
-}
-
 void solve() {
-  rc start = rc(0, 6);
+  rc start = rc(n / 2, m / 2);
+  int numCiclo = 0;
   while (matrix[start.first][start.second].type != VUOTO)
     start = rc(rand() % n, rand() % m);
   // Keeps track of the presence/absence of walls at a given time around the
   // cell, see https://imgur.com/a/9VC1ZLx for infos
-  states = stack<pair<rc, bitset<24>>>(); // TODO change back to just
-                                          // stack<bitset<24>>
+  states = stack<bitset<24>>(); // TODO change back to just
+                                // stack<bitset<24>>
   stack<rc> stackCelle = stack<rc>();
   stack<char> mosseDaFare = stack<char>(); // quando si pusha un nuovo gruppo si
                                            // mette 'T' all'inizio e si salva lo
@@ -335,6 +311,7 @@ void solve() {
   stackCelle.push(currentCell);
   do {
     currentCell = stackCelle.top();
+    numCiclo++;
     if (inNewCell) {
       saveState(currentCell);
       inNewCell = false;
@@ -378,7 +355,6 @@ void solve() {
           float frazioneAnelliAttraversata =
               (float)anelliAttraversati / bestPossible;
           if (frazioneAnelliAttraversata - bestFound > 0.1) {
-            // TODO print solution on out
             bestFound = frazioneAnelliAttraversata;
             stampaSoluz(stackCelle, dir, anelliAttraversati);
           }
@@ -577,11 +553,10 @@ void saveState(rc currentCell) {
     if (currentCell.second + 2 < m)
       state[23] = matrix[currentCell.first][currentCell.second + 2].R;
   }
-  states.push(pair<rc, bitset<24>>(currentCell, state));
+  states.push(state);
 }
 
-void restoreState(pair<rc, bitset<24>> paio, rc center) {
-  bitset<24> state = paio.second;
+void restoreState(bitset<24> state, rc center) {
   matrix[center.first][center.second].U = state[0];
   matrix[center.first][center.second].L = state[1];
   matrix[center.first][center.second].D = state[2];
@@ -621,33 +596,6 @@ void restoreState(pair<rc, bitset<24>> paio, rc center) {
     matrix[center.first][row].R = state[19];
     if (center.second + 2 < m)
       matrix[center.first][center.second + 2].R = state[23];
-  }
-}
-
-void stampaPercorso(stack<rc> original, char prossimaMossa) {
-  stack<rc> inverted = stack<rc>();
-  int orSize = original.size();
-  stringbuf sb = stringbuf();
-  for (int i = orSize; i > 0; i--) {
-    inverted.push(original.top());
-    original.pop();
-  }
-  rc current = inverted.top();
-  inverted.pop();
-  for (int i = 1; i < orSize; i++) {
-    rc newRc = inverted.top();
-    if (newRc.first == current.first) {
-      if (newRc.second - 1 == current.second) {
-        sb.sputc('R');
-      } else
-        sb.sputc('L');
-    } else if (newRc.first - 1 == current.first) {
-      sb.sputc('D');
-    } else
-      sb.sputc('U');
-    original.push(newRc);
-    inverted.pop();
-    current = newRc;
   }
 }
 
