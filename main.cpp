@@ -68,7 +68,7 @@ bool checkLeft(rc pos);
 bool checkUp(rc pos);
 bool checkDown(rc pos);
 
-void rettangoloni();
+rc rettangoloni();
 rc whileRight(rc pos);
 rc whileLeft(rc pos);
 rc whileUp(rc pos);
@@ -631,9 +631,15 @@ bool checkTry(){
   return true;
 }
 
-void rettangoloni(){
-  rc start=blacks[0];
+rc rettangoloni(){
+  int i = 0;
+  rc start;
+  do{ 
+    start=blacks[i];
+    i++;
+  }while(matrix[start.first+1][start.second].type != 1 && matrix[start.first-1][start.second].type != 1 && matrix[start.first][start.second+1].type != 1 && matrix[start.first][start.second-1].type != 1);
   rc pos=start;
+  cout<<"START: "<<start.first<<" "<<start.second<<endl;
   bool nearWhite = true;
   
   do{
@@ -681,9 +687,9 @@ void rettangoloni(){
           else if (checkLeft(pos)) pos = whileLeft(pos);
       }
     }
-  
+  cout<<"Perc: "<<moves<<endl;
   }while(pos != start);
-  
+  return start;
 }
 
 bool checkRight(rc pos){
@@ -752,15 +758,16 @@ rc whileRight(rc pos){
     if(matrix[pos.first][pos.second+1].type == 1){
       return pos;
     }
-    if(matrix[pos.first-1][pos.second+2].type == 1 ){
-      pos.second++;
-      mossa("R", pos);
-      pos.first--;
-      mossa("U",pos);
-      pos.second++;
-      mossa("R", pos);
-      return whileRight(pos); 
-    }else{
+    while( matrix[pos.first-1][pos.second+2].type == 1  || matrix[pos.first+1][pos.second+2].type == 1 ){
+      if(matrix[pos.first-1][pos.second+2].type == 1 ){
+        pos.second++;
+        mossa("R", pos);
+        pos.first--;
+        mossa("U",pos);
+        pos.second++;
+        mossa("R", pos);
+        return whileRight(pos); 
+      }
       if(matrix[pos.first+1][pos.second+2].type == 1 ){
         pos.second++;
         mossa("R", pos);
