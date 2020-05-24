@@ -15,6 +15,7 @@ typedef struct {
   bool L = true;  // Can go left from here
   bool R = true;  // Can go right from here
   short type = 0; // 0=vuota,1=bianca, 2=nera
+  bool vis = false;
 } cell;
 
 // Globals
@@ -633,33 +634,26 @@ bool checkTry(){
 void rettangoloni(){
   rc start=blacks[0];
   rc pos=start;
-  cout<<"start: "<<pos.first<<" "<<pos.second<<endl;
   bool nearWhite = true;
   
   do{
     nearWhite = true;
-    cout<<">"<<pos.first<<" "<<pos.second<<endl;
     if(matrix[pos.first][pos.second].R && matrix[pos.first][pos.second+1].type==1){
-      cout<<"-R-"<<endl;
       pos=whileRight(pos);
       matrix[pos.first][pos.second].L=false;
       }else{
         if(matrix[pos.first][pos.second].L && matrix[pos.first][pos.second-1].type==1){
-          cout<<"-L-"<<endl;
           pos=whileLeft(pos);
           matrix[pos.first][pos.second].R=false;
         }else{
           if(matrix[pos.first][pos.second].U && matrix[pos.first-1][pos.second].type==1){
-            cout<<"-U-"<<endl;
             pos=whileUp(pos);
             matrix[pos.first][pos.second].D=false;
           }else{
             if(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1){
-              cout<<"-D-"<<endl;
               pos=whileDown(pos);
               matrix[pos.first][pos.second].U=false;
           }else{
-            cout<<"NON CI SONO BIANCHI VICINI";
             nearWhite = false;
           }
         }
@@ -674,7 +668,7 @@ void rettangoloni(){
         !(matrix[pos.first][pos.second].U && matrix[pos.first-1][pos.second].type==1) && 
         !(matrix[pos.first][pos.second].D && matrix[pos.first+1][pos.second].type==1)*/ ){
       char m = moves[moves.length()-1];
-      cout<<"last move: "<< m <<endl;
+      
       if(m == 'R' || m == 'L'){
           if (checkDown(pos)){
             pos = whileDown(pos);
@@ -687,7 +681,7 @@ void rettangoloni(){
           else if (checkLeft(pos)) pos = whileLeft(pos);
       }
     }
-  cout<<" > "<<moves<<endl;
+  
   }while(pos != start);
   
 }
@@ -698,7 +692,7 @@ bool checkRight(rc pos){
     tmp.second++;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.second < m-1);
 
-  if(matrix[tmp.first][tmp.second].type != 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0 && !matrix[tmp.first][tmp.second].vis) return true;
   else return false;
 }
 
@@ -708,7 +702,7 @@ bool checkLeft(rc pos){
     tmp.second--;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.second > 0);
 
-  if(matrix[tmp.first][tmp.second].type != 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0 && !matrix[tmp.first][tmp.second].vis) return true;
   else return false;
 }
 
@@ -718,7 +712,7 @@ bool checkUp(rc pos){
     tmp.first--;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first > 0);
 
-  if(matrix[tmp.first][tmp.second].type != 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0 && !matrix[tmp.first][tmp.second].vis) return true;
   else return false;
 }
 
@@ -728,7 +722,7 @@ bool checkDown(rc pos){
     tmp.first++;
   }while(matrix[tmp.first][tmp.second].type == 0 && tmp.first < n-1);
 
-  if(matrix[tmp.first][tmp.second].type != 0) return true;
+  if(matrix[tmp.first][tmp.second].type != 0 && !matrix[tmp.first][tmp.second].vis) return true;
   else return false;
 }
 
@@ -929,8 +923,7 @@ rc whileDown(rc pos){
 
 void mossa(string dir,rc pos){
   if(matrix[pos.first][pos.second].type!=0)rings++;
-  //cout << dir;
-
+  matrix[pos.first][pos.second].vis=true;
   moves.append(dir);
   nmoves++;
 }
