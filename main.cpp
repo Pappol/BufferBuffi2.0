@@ -422,7 +422,7 @@ rc whileDown(rc pos){
     return pos;
   }
 
-  if(){
+  if(pos.first < n-1){
     if(matrix[pos.first][pos.second].type == 1 && matrix[pos.first+1][pos.second].type == 2){
       pos.first++;
       matrix[pos.first][pos.second].U = false;
@@ -434,8 +434,8 @@ rc whileDown(rc pos){
       if(matrix[pos.first-1][pos.second].type == 1){
         return pos;
       }
-      if(){
-        if(matrix[pos.first+2][pos.second+1].type == 1 ){
+      if(pos.first<n-2){
+        if(pos.second<n-1 && matrix[pos.first+2][pos.second+1].type == 1 ){
           pos.first++;
           mossa("D",pos);
           pos.second++;
@@ -443,16 +443,15 @@ rc whileDown(rc pos){
           pos.first++;
           mossa("D",pos);
           return whileDown(pos); 
-        }else{
-          if(matrix[pos.first+2][pos.second-1].type == 1 ){
-            pos.first++;
-            mossa("D",pos);
-            pos.second--;
-            mossa("L", pos);
-            pos.first++;
-            mossa("D",pos);
-            return whileDown(pos);  
-          }
+        }
+        if(pos.second > 0 && matrix[pos.first+2][pos.second-1].type == 1 ){
+           pos.first++;
+           mossa("D",pos);
+           pos.second--;
+           mossa("L", pos);
+           pos.first++;
+           mossa("D",pos);
+           return whileDown(pos);  
         }
       }
     }
