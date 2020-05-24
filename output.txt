@@ -27,7 +27,7 @@ At start of cycle 0 matrix is:
    0      0      0   
 
 saving state centered in 1 1
-restoring state centered in 1 1
+restoring state centered in 1,1 w\ state of 1,1 OK
 percorso: 
 Next move>R to 1,2
 
@@ -46,7 +46,7 @@ At start of cycle 1 matrix is:
    0      0      0   
 
 saving state centered in 1 2
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
 percorso: R
 Next move>U to 0,2
 
@@ -57,15 +57,15 @@ At start of cycle 2 matrix is:
    .      .      0   
 
    .      .      .   
- 0   .  .   .  0   0 
+ 0   .  .   0  0   0 
    .      .      .   
 
-   .      .      .   
+   .      .      0   
  0   .  .   .  .   0 
    0      0      0   
 
 saving state centered in 0 2
-restoring state centered in 0 2
+restoring state centered in 0,2 w\ state of 0,2 OK
 percorso: RU
 Next move>L to 0,1
 
@@ -76,23 +76,27 @@ At start of cycle 3 matrix is:
    .      .      0   
 
    .      .      0   
- 0   .  .   .  0   0 
+ 0   .  .   0  0   0 
    .      .      .   
 
-   .      .      .   
+   .      .      0   
  0   .  .   .  .   0 
    0      0      0   
 
 
 percorso: RU
 Next move>T
-restoring state centered in 0 2
+restoring state centered in 0,2 w\ state of 0,2 OK
+popping stackCelle from
+1,1-1,2-0,2-to
+1,1-1,2-
+restoring state centered in 1,2 w\ state of 1,2 OK
 
 -----------------------------
 At start of cycle 4 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      0   
+   .      .      .   
 
    .      .      .   
  0   .  .   .  0 x 0 
@@ -103,7 +107,7 @@ At start of cycle 4 matrix is:
    0      0      0   
 
 
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
 percorso: R
 Next move>D to 2,2
 
@@ -111,10 +115,10 @@ Next move>D to 2,2
 At start of cycle 5 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   .      .      0   
 
    .      .      .   
- 0   .  .   .  0   0 
+ 0   .  .   0  0   0 
    .      .      .   
 
    .      .      0   
@@ -122,7 +126,7 @@ At start of cycle 5 matrix is:
    0      0      0   
 
 saving state centered in 2 2
-restoring state centered in 2 2
+restoring state centered in 2,2 w\ state of 2,2 OK
 percorso: RD
 Next move>L to 2,1
 
@@ -130,10 +134,10 @@ Next move>L to 2,1
 At start of cycle 6 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   .      .      0   
 
    .      .      .   
- 0   .  .   .  0   0 
+ 0   .  .   0  0   0 
    .      .      0   
 
    .      .      0   
@@ -141,7 +145,7 @@ At start of cycle 6 matrix is:
    0      0      0   
 
 saving state centered in 2 1
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
 percorso: RDL
 Next move>U to 1,1
 ------found a path, time to implement stopping logic
@@ -151,10 +155,10 @@ Next move>U to 1,1
 At start of cycle 7 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   .      .      0   
 
    .      .      .   
- 0   .  .   .  0   0 
+ 0   .  .   0  0   0 
    .      .      0   
 
    .      .      0   
@@ -162,7 +166,7 @@ At start of cycle 7 matrix is:
    0      0      0   
 
 
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
 percorso: RDL
 Next move>L to 2,0
 
@@ -170,18 +174,18 @@ Next move>L to 2,0
 At start of cycle 8 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   .  .   .  0   0 
    .      .      0   
 
-   .      .      0   
- 0 x 0  .   0  .   0 
+   .      .      .   
+ 0   .  .   0  0   0 
+   .      0      0   
+
+   .      0      0   
+ 0 x 0  .   0  0   0 
    0      0      0   
 
 saving state centered in 2 0
-restoring state centered in 2 0
+restoring state centered in 2,0 w\ state of 2,0 OK
 percorso: RDLL
 Next move>U to 1,0
 
@@ -189,18 +193,18 @@ Next move>U to 1,0
 At start of cycle 9 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0 x .  .   .  0   0 
-   0      .      0   
-
    .      .      0   
- 0   0  0   0  .   0 
+
+   .      .      .   
+ 0 x .  .   0  0   0 
+   0      0      0   
+
+   .      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 saving state centered in 1 0
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
 percorso: RDLLU
 Next move>U to 0,0
 
@@ -208,18 +212,18 @@ Next move>U to 0,0
 At start of cycle 10 matrix is:
    0      0      0   
  0 x .  .   .  .   0 
-   0      .      .   
-
-   .      .      .   
- 0   .  .   .  0   0 
    0      .      0   
 
-   .      .      0   
- 0   0  0   0  .   0 
+   .      .      .   
+ 0   0  0   0  0   0 
+   0      0      0   
+
+   0      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 saving state centered in 0 0
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,0 OK
 percorso: RDLLUU
 Next move>R to 0,1
 
@@ -227,37 +231,41 @@ Next move>R to 0,1
 At start of cycle 11 matrix is:
    0      0      0   
  0 x .  0   .  .   0 
-   0      .      .   
-
-   0      .      .   
- 0   .  .   .  0   0 
    0      .      0   
 
-   .      .      0   
- 0   0  0   0  .   0 
+   0      .      .   
+ 0   0  0   0  0   0 
+   0      0      0   
+
+   0      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 
 percorso: RDLLUU
 Next move>T
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,0 OK
+popping stackCelle from
+1,1-1,2-2,2-2,1-2,0-1,0-0,0-to
+1,1-1,2-2,2-2,1-2,0-1,0-
+restoring state centered in 1,0 w\ state of 1,0 OK
 
 -----------------------------
 At start of cycle 12 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   0      .      .   
+   .      .      0   
 
    .      .      .   
- 0 x .  .   .  0   0 
-   0      .      0   
+ 0 x .  .   0  0   0 
+   0      0      0   
 
-   .      .      0   
- 0   0  0   0  .   0 
+   .      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
 percorso: RDLLU
 Next move>R to 1,1
 ------found a path, time to implement stopping logic
@@ -267,77 +275,93 @@ Next move>R to 1,1
 At start of cycle 13 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0 x .  .   .  0   0 
-   0      .      0   
-
    .      .      0   
- 0   0  0   0  .   0 
+
+   .      .      .   
+ 0 x .  .   0  0   0 
+   0      0      0   
+
+   .      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 
 percorso: RDLLU
 Next move>T
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
+popping stackCelle from
+1,1-1,2-2,2-2,1-2,0-1,0-to
+1,1-1,2-2,2-2,1-2,0-
+restoring state centered in 2,0 w\ state of 2,0 OK
 
 -----------------------------
 At start of cycle 14 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   .  .   .  0   0 
-   0      .      0   
-
    .      .      0   
- 0 x 0  0   0  .   0 
+
+   .      .      .   
+ 0   .  .   0  0   0 
+   .      0      0   
+
+   .      0      0   
+ 0 x 0  .   0  0   0 
    0      0      0   
 
 
 percorso: RDLL
 Next move>T
-restoring state centered in 2 0
+restoring state centered in 2,0 w\ state of 2,0 OK
+popping stackCelle from
+1,1-1,2-2,2-2,1-2,0-to
+1,1-1,2-2,2-2,1-
+restoring state centered in 2,1 w\ state of 2,1 OK
 
 -----------------------------
 At start of cycle 15 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   .      .      0   
 
    .      .      .   
- 0   .  .   .  0   0 
+ 0   .  .   0  0   0 
    .      .      0   
 
    .      .      0   
- 0   0  . x 0  .   0 
+ 0   .  . x 0  .   0 
    0      0      0   
 
 
 percorso: RDL
 Next move>T
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
+popping stackCelle from
+1,1-1,2-2,2-2,1-to
+1,1-1,2-2,2-
+restoring state centered in 2,2 w\ state of 2,2 OK
 
 -----------------------------
 At start of cycle 16 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   .  .   .  0   0 
    .      .      0   
 
+   .      .      .   
+ 0   .  .   0  0   0 
+   .      .      .   
+
    .      .      0   
- 0   .  .   0  . x 0 
+ 0   .  .   .  . x 0 
    0      0      0   
 
 
 percorso: RD
 Next move>T
-restoring state centered in 2 2
+restoring state centered in 2,2 w\ state of 2,2 OK
+popping stackCelle from
+1,1-1,2-2,2-to
+1,1-1,2-
+restoring state centered in 1,2 w\ state of 1,2 OK
 
 -----------------------------
 At start of cycle 17 matrix is:
@@ -349,14 +373,18 @@ At start of cycle 17 matrix is:
  0   .  .   .  0 x 0 
    .      .      .   
 
-   .      .      0   
+   .      .      .   
  0   .  .   .  .   0 
    0      0      0   
 
 
 percorso: R
 Next move>T
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
+popping stackCelle from
+1,1-1,2-to
+1,1-
+restoring state centered in 1,1 w\ state of 1,1 OK
 
 -----------------------------
 At start of cycle 18 matrix is:
@@ -365,7 +393,7 @@ At start of cycle 18 matrix is:
    .      .      .   
 
    .      .      .   
- 0   .  . x .  0   0 
+ 0   .  . x .  .   0 
    .      .      .   
 
    .      .      .   
@@ -373,7 +401,7 @@ At start of cycle 18 matrix is:
    0      0      0   
 
 
-restoring state centered in 1 1
+restoring state centered in 1,1 w\ state of 1,1 OK
 percorso: 
 Next move>D to 2,1
 
@@ -392,7 +420,7 @@ At start of cycle 19 matrix is:
    0      0      0   
 
 saving state centered in 2 1
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
 percorso: D
 Next move>L to 2,0
 
@@ -404,14 +432,14 @@ At start of cycle 20 matrix is:
 
    .      .      .   
  0   .  .   .  .   0 
-   .      .      .   
+   .      0      .   
 
    .      0      .   
- 0 x 0  .   .  .   0 
+ 0 x 0  .   .  0   0 
    0      0      0   
 
 saving state centered in 2 0
-restoring state centered in 2 0
+restoring state centered in 2,0 w\ state of 2,0 OK
 percorso: DL
 Next move>U to 1,0
 
@@ -423,14 +451,14 @@ At start of cycle 21 matrix is:
 
    .      .      .   
  0 x .  .   .  .   0 
-   0      .      .   
+   0      0      .   
 
    .      0      .   
- 0   0  0   .  .   0 
+ 0   0  0   .  0   0 
    0      0      0   
 
 saving state centered in 1 0
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
 percorso: DLU
 Next move>U to 0,0
 
@@ -441,15 +469,15 @@ At start of cycle 22 matrix is:
    0      .      .   
 
    .      .      .   
- 0   .  .   .  .   0 
-   0      .      .   
-
-   .      0      .   
  0   0  0   .  .   0 
+   0      0      .   
+
+   0      0      .   
+ 0   0  0   .  0   0 
    0      0      0   
 
 saving state centered in 0 0
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,0 OK
 percorso: DLUU
 Next move>R to 0,1
 
@@ -460,34 +488,38 @@ At start of cycle 23 matrix is:
    0      .      .   
 
    0      .      .   
- 0   .  .   .  .   0 
-   0      .      .   
-
-   .      0      .   
  0   0  0   .  .   0 
+   0      0      .   
+
+   0      0      .   
+ 0   0  0   .  0   0 
    0      0      0   
 
 
 percorso: DLUU
 Next move>T
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,0 OK
+popping stackCelle from
+1,1-2,1-2,0-1,0-0,0-to
+1,1-2,1-2,0-1,0-
+restoring state centered in 1,0 w\ state of 1,0 OK
 
 -----------------------------
 At start of cycle 24 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   0      .      .   
+   .      .      .   
 
    .      .      .   
  0 x .  .   .  .   0 
-   0      .      .   
+   0      0      .   
 
    .      0      .   
- 0   0  0   .  .   0 
+ 0   0  0   .  0   0 
    0      0      0   
 
 
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
 percorso: DLU
 Next move>R to 1,1
 ------found a path, time to implement stopping logic
@@ -501,16 +533,20 @@ At start of cycle 25 matrix is:
 
    .      .      .   
  0 x .  .   .  .   0 
-   0      .      .   
+   0      0      .   
 
    .      0      .   
- 0   0  0   .  .   0 
+ 0   0  0   .  0   0 
    0      0      0   
 
 
 percorso: DLU
 Next move>T
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
+popping stackCelle from
+1,1-2,1-2,0-1,0-to
+1,1-2,1-2,0-
+restoring state centered in 2,0 w\ state of 2,0 OK
 
 -----------------------------
 At start of cycle 26 matrix is:
@@ -520,16 +556,20 @@ At start of cycle 26 matrix is:
 
    .      .      .   
  0   .  .   .  .   0 
-   0      .      .   
+   .      0      .   
 
    .      0      .   
- 0 x 0  0   .  .   0 
+ 0 x 0  .   .  0   0 
    0      0      0   
 
 
 percorso: DL
 Next move>T
-restoring state centered in 2 0
+restoring state centered in 2,0 w\ state of 2,0 OK
+popping stackCelle from
+1,1-2,1-2,0-to
+1,1-2,1-
+restoring state centered in 2,1 w\ state of 2,1 OK
 
 -----------------------------
 At start of cycle 27 matrix is:
@@ -542,11 +582,11 @@ At start of cycle 27 matrix is:
    .      .      .   
 
    .      0      .   
- 0   0  . x .  .   0 
+ 0   .  . x .  .   0 
    0      0      0   
 
 
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
 percorso: D
 Next move>R to 2,2
 
@@ -558,14 +598,14 @@ At start of cycle 28 matrix is:
 
    .      .      .   
  0   .  .   .  .   0 
-   .      .      .   
+   .      0      .   
 
    .      0      .   
- 0   .  .   .  0 x 0 
+ 0   0  .   .  0 x 0 
    0      0      0   
 
 saving state centered in 2 2
-restoring state centered in 2 2
+restoring state centered in 2,2 w\ state of 2,2 OK
 percorso: DR
 Next move>U to 1,2
 
@@ -577,14 +617,14 @@ At start of cycle 29 matrix is:
 
    .      .      .   
  0   .  .   .  . x 0 
-   .      .      0   
+   .      0      0   
 
    .      0      .   
- 0   .  .   0  0   0 
+ 0   0  .   0  0   0 
    0      0      0   
 
 saving state centered in 1 2
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
 percorso: DRU
 Next move>U to 0,2
 
@@ -595,15 +635,15 @@ At start of cycle 30 matrix is:
    .      .      0   
 
    .      .      .   
- 0   .  .   .  .   0 
-   .      .      0   
-
-   .      0      .   
  0   .  .   0  0   0 
+   .      0      0   
+
+   .      0      0   
+ 0   0  .   0  0   0 
    0      0      0   
 
 saving state centered in 0 2
-restoring state centered in 0 2
+restoring state centered in 0,2 w\ state of 0,2 OK
 percorso: DRUU
 Next move>L to 0,1
 
@@ -614,34 +654,38 @@ At start of cycle 31 matrix is:
    .      .      0   
 
    .      .      0   
- 0   .  .   .  .   0 
-   .      .      0   
-
-   .      0      .   
  0   .  .   0  0   0 
+   .      0      0   
+
+   .      0      0   
+ 0   0  .   0  0   0 
    0      0      0   
 
 
 percorso: DRUU
 Next move>T
-restoring state centered in 0 2
+restoring state centered in 0,2 w\ state of 0,2 OK
+popping stackCelle from
+1,1-2,1-2,2-1,2-0,2-to
+1,1-2,1-2,2-1,2-
+restoring state centered in 1,2 w\ state of 1,2 OK
 
 -----------------------------
 At start of cycle 32 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      0   
+   .      .      .   
 
    .      .      .   
  0   .  .   .  . x 0 
-   .      .      0   
+   .      0      0   
 
    .      0      .   
- 0   .  .   0  0   0 
+ 0   0  .   0  0   0 
    0      0      0   
 
 
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
 percorso: DRU
 Next move>L to 1,1
 ------found a path, time to implement stopping logic
@@ -655,16 +699,20 @@ At start of cycle 33 matrix is:
 
    .      .      .   
  0   .  .   .  . x 0 
-   .      .      0   
+   .      0      0   
 
    .      0      .   
- 0   .  .   0  0   0 
+ 0   0  .   0  0   0 
    0      0      0   
 
 
 percorso: DRU
 Next move>T
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
+popping stackCelle from
+1,1-2,1-2,2-1,2-to
+1,1-2,1-2,2-
+restoring state centered in 2,2 w\ state of 2,2 OK
 
 -----------------------------
 At start of cycle 34 matrix is:
@@ -674,16 +722,20 @@ At start of cycle 34 matrix is:
 
    .      .      .   
  0   .  .   .  .   0 
-   .      .      0   
+   .      0      .   
 
    .      0      .   
- 0   .  .   0  0 x 0 
+ 0   0  .   .  0 x 0 
    0      0      0   
 
 
 percorso: DR
 Next move>T
-restoring state centered in 2 2
+restoring state centered in 2,2 w\ state of 2,2 OK
+popping stackCelle from
+1,1-2,1-2,2-to
+1,1-2,1-
+restoring state centered in 2,1 w\ state of 2,1 OK
 
 -----------------------------
 At start of cycle 35 matrix is:
@@ -696,13 +748,17 @@ At start of cycle 35 matrix is:
    .      .      .   
 
    .      0      .   
- 0   .  . x .  0   0 
+ 0   .  . x .  .   0 
    0      0      0   
 
 
 percorso: D
 Next move>T
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
+popping stackCelle from
+1,1-2,1-to
+1,1-
+restoring state centered in 1,1 w\ state of 1,1 OK
 
 -----------------------------
 At start of cycle 36 matrix is:
@@ -714,12 +770,12 @@ At start of cycle 36 matrix is:
  0   .  . x .  .   0 
    .      .      .   
 
-   .      0      .   
+   .      .      .   
  0   .  .   .  .   0 
    0      0      0   
 
 
-restoring state centered in 1 1
+restoring state centered in 1,1 w\ state of 1,1 OK
 percorso: 
 Next move>L to 1,0
 
@@ -738,7 +794,7 @@ At start of cycle 37 matrix is:
    0      0      0   
 
 saving state centered in 1 0
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
 percorso: L
 Next move>U to 0,0
 
@@ -749,15 +805,15 @@ At start of cycle 38 matrix is:
    0      .      .   
 
    .      .      .   
- 0   0  .   .  .   0 
+ 0   0  0   .  .   0 
    .      .      .   
 
-   .      .      .   
+   0      .      .   
  0   .  .   .  .   0 
    0      0      0   
 
 saving state centered in 0 0
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,0 OK
 percorso: LU
 Next move>R to 0,1
 
@@ -768,23 +824,27 @@ At start of cycle 39 matrix is:
    0      .      .   
 
    0      .      .   
- 0   0  .   .  .   0 
+ 0   0  0   .  .   0 
    .      .      .   
 
-   .      .      .   
+   0      .      .   
  0   .  .   .  .   0 
    0      0      0   
 
 
 percorso: LU
 Next move>T
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,0 OK
+popping stackCelle from
+1,1-1,0-0,0-to
+1,1-1,0-
+restoring state centered in 1,0 w\ state of 1,0 OK
 
 -----------------------------
 At start of cycle 40 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   0      .      .   
+   .      .      .   
 
    .      .      .   
  0 x 0  .   .  .   0 
@@ -795,7 +855,7 @@ At start of cycle 40 matrix is:
    0      0      0   
 
 
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
 percorso: L
 Next move>D to 2,0
 
@@ -803,10 +863,10 @@ Next move>D to 2,0
 At start of cycle 41 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   0      .      .   
 
    .      .      .   
- 0   0  .   .  .   0 
+ 0   0  0   .  .   0 
    .      .      .   
 
    0      .      .   
@@ -814,7 +874,7 @@ At start of cycle 41 matrix is:
    0      0      0   
 
 saving state centered in 2 0
-restoring state centered in 2 0
+restoring state centered in 2,0 w\ state of 2,0 OK
 percorso: LD
 Next move>R to 2,1
 
@@ -822,10 +882,10 @@ Next move>R to 2,1
 At start of cycle 42 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   0      .      .   
 
    .      .      .   
- 0   0  .   .  .   0 
+ 0   0  0   .  .   0 
    0      .      .   
 
    0      .      .   
@@ -833,7 +893,7 @@ At start of cycle 42 matrix is:
    0      0      0   
 
 saving state centered in 2 1
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
 percorso: LDR
 Next move>U to 1,1
 ------found a path, time to implement stopping logic
@@ -843,10 +903,10 @@ Next move>U to 1,1
 At start of cycle 43 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   0      .      .   
 
    .      .      .   
- 0   0  .   .  .   0 
+ 0   0  0   .  .   0 
    0      .      .   
 
    0      .      .   
@@ -854,7 +914,7 @@ At start of cycle 43 matrix is:
    0      0      0   
 
 
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
 percorso: LDR
 Next move>R to 2,2
 
@@ -862,18 +922,18 @@ Next move>R to 2,2
 At start of cycle 44 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   0  .   .  .   0 
    0      .      .   
 
-   0      .      .   
- 0   .  0   .  0 x 0 
+   .      .      .   
+ 0   0  0   .  .   0 
+   0      0      .   
+
+   0      0      .   
+ 0   0  0   .  0 x 0 
    0      0      0   
 
 saving state centered in 2 2
-restoring state centered in 2 2
+restoring state centered in 2,2 w\ state of 2,2 OK
 percorso: LDRR
 Next move>U to 1,2
 
@@ -881,18 +941,18 @@ Next move>U to 1,2
 At start of cycle 45 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   0  .   .  . x 0 
-   0      .      0   
-
    0      .      .   
- 0   .  0   0  0   0 
+
+   .      .      .   
+ 0   0  0   .  . x 0 
+   0      0      0   
+
+   0      0      .   
+ 0   0  0   0  0   0 
    0      0      0   
 
 saving state centered in 1 2
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
 percorso: LDRRU
 Next move>U to 0,2
 
@@ -900,18 +960,18 @@ Next move>U to 0,2
 At start of cycle 46 matrix is:
    0      0      0   
  0   .  .   .  . x 0 
-   .      .      0   
-
-   .      .      .   
- 0   0  .   .  .   0 
    0      .      0   
 
-   0      .      .   
- 0   .  0   0  0   0 
+   .      .      .   
+ 0   0  0   0  0   0 
+   0      0      0   
+
+   0      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 saving state centered in 0 2
-restoring state centered in 0 2
+restoring state centered in 0,2 w\ state of 0,2 OK
 percorso: LDRRUU
 Next move>L to 0,1
 
@@ -919,37 +979,41 @@ Next move>L to 0,1
 At start of cycle 47 matrix is:
    0      0      0   
  0   .  .   0  . x 0 
-   .      .      0   
-
-   .      .      0   
- 0   0  .   .  .   0 
    0      .      0   
 
-   0      .      .   
- 0   .  0   0  0   0 
+   .      .      0   
+ 0   0  0   0  0   0 
+   0      0      0   
+
+   0      0      0   
+ 0   0  0   0  0   0 
    0      0      0   
 
 
 percorso: LDRRUU
 Next move>T
-restoring state centered in 0 2
+restoring state centered in 0,2 w\ state of 0,2 OK
+popping stackCelle from
+1,1-1,0-2,0-2,1-2,2-1,2-0,2-to
+1,1-1,0-2,0-2,1-2,2-1,2-
+restoring state centered in 1,2 w\ state of 1,2 OK
 
 -----------------------------
 At start of cycle 48 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      0   
+   0      .      .   
 
    .      .      .   
- 0   0  .   .  . x 0 
-   0      .      0   
+ 0   0  0   .  . x 0 
+   0      0      0   
 
-   0      .      .   
- 0   .  0   0  0   0 
+   0      0      .   
+ 0   0  0   0  0   0 
    0      0      0   
 
 
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
 percorso: LDRRU
 Next move>L to 1,1
 ------found a path, time to implement stopping logic
@@ -959,77 +1023,93 @@ Next move>L to 1,1
 At start of cycle 49 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   0  .   .  . x 0 
-   0      .      0   
-
    0      .      .   
- 0   .  0   0  0   0 
+
+   .      .      .   
+ 0   0  0   .  . x 0 
+   0      0      0   
+
+   0      0      .   
+ 0   0  0   0  0   0 
    0      0      0   
 
 
 percorso: LDRRU
 Next move>T
-restoring state centered in 1 2
+restoring state centered in 1,2 w\ state of 1,2 OK
+popping stackCelle from
+1,1-1,0-2,0-2,1-2,2-1,2-to
+1,1-1,0-2,0-2,1-2,2-
+restoring state centered in 2,2 w\ state of 2,2 OK
 
 -----------------------------
 At start of cycle 50 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   0  .   .  .   0 
-   0      .      0   
-
    0      .      .   
- 0   .  0   0  0 x 0 
+
+   .      .      .   
+ 0   0  0   .  .   0 
+   0      0      .   
+
+   0      0      .   
+ 0   0  0   .  0 x 0 
    0      0      0   
 
 
 percorso: LDRR
 Next move>T
-restoring state centered in 2 2
+restoring state centered in 2,2 w\ state of 2,2 OK
+popping stackCelle from
+1,1-1,0-2,0-2,1-2,2-to
+1,1-1,0-2,0-2,1-
+restoring state centered in 2,1 w\ state of 2,1 OK
 
 -----------------------------
 At start of cycle 51 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
+   0      .      .   
 
    .      .      .   
- 0   0  .   .  .   0 
+ 0   0  0   .  .   0 
    0      .      .   
 
    0      .      .   
- 0   .  0 x .  0   0 
+ 0   .  0 x .  .   0 
    0      0      0   
 
 
 percorso: LDR
 Next move>T
-restoring state centered in 2 1
+restoring state centered in 2,1 w\ state of 2,1 OK
+popping stackCelle from
+1,1-1,0-2,0-2,1-to
+1,1-1,0-2,0-
+restoring state centered in 2,0 w\ state of 2,0 OK
 
 -----------------------------
 At start of cycle 52 matrix is:
    0      0      0   
  0   .  .   .  .   0 
-   .      .      .   
-
-   .      .      .   
- 0   0  .   .  .   0 
    0      .      .   
 
+   .      .      .   
+ 0   0  0   .  .   0 
+   .      .      .   
+
    0      .      .   
- 0 x .  0   .  .   0 
+ 0 x .  .   .  .   0 
    0      0      0   
 
 
 percorso: LD
 Next move>T
-restoring state centered in 2 0
+restoring state centered in 2,0 w\ state of 2,0 OK
+popping stackCelle from
+1,1-1,0-2,0-to
+1,1-1,0-
+restoring state centered in 1,0 w\ state of 1,0 OK
 
 -----------------------------
 At start of cycle 53 matrix is:
@@ -1041,14 +1121,18 @@ At start of cycle 53 matrix is:
  0 x 0  .   .  .   0 
    .      .      .   
 
-   0      .      .   
+   .      .      .   
  0   .  .   .  .   0 
    0      0      0   
 
 
 percorso: L
 Next move>T
-restoring state centered in 1 0
+restoring state centered in 1,0 w\ state of 1,0 OK
+popping stackCelle from
+1,1-1,0-to
+1,1-
+restoring state centered in 1,1 w\ state of 1,1 OK
 
 -----------------------------
 At start of cycle 54 matrix is:
@@ -1057,7 +1141,7 @@ At start of cycle 54 matrix is:
    .      .      .   
 
    .      .      .   
- 0   0  . x .  .   0 
+ 0   .  . x .  .   0 
    .      .      .   
 
    .      .      .   
@@ -1065,7 +1149,7 @@ At start of cycle 54 matrix is:
    0      0      0   
 
 
-restoring state centered in 1 1
+restoring state centered in 1,1 w\ state of 1,1 OK
 percorso: 
 Next move>U to 0,1
 
@@ -1084,17 +1168,17 @@ At start of cycle 55 matrix is:
    0      0      0   
 
 saving state centered in 0 1
-restoring state centered in 0 1
+restoring state centered in 0,1 w\ state of 0,1 OK
 percorso: U
 Next move>L to 0,0
 
 -----------------------------
 At start of cycle 56 matrix is:
    0      0      0   
- 0 x 0  .   .  .   0 
+ 0 x 0  .   .  0   0 
    .      0      .   
 
-   .      .      .   
+   .      0      .   
  0   .  .   .  .   0 
    .      .      .   
 
@@ -1103,17 +1187,17 @@ At start of cycle 56 matrix is:
    0      0      0   
 
 
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,1 NOOOOOOOOOOOOOOO
 percorso: UL
 Next move>R to 0,1
 
 -----------------------------
 At start of cycle 57 matrix is:
    0      0      0   
- . x .  0   0  .   0 
+ . x .  0   0  0   0 
    0      .      .   
 
-   0      .      .   
+   0      0      .   
  .   .  .   .  .   0 
    .      .      .   
 
@@ -1124,4 +1208,8 @@ At start of cycle 57 matrix is:
 
 percorso: UL
 Next move>T
-restoring state centered in 0 0
+restoring state centered in 0,0 w\ state of 0,1 NOOOOOOOOOOOOOOO
+popping stackCelle from
+1,1-0,1-0,0-to
+1,1-0,1-
+restoring state centered in 0,1 w\ state of 1,1 NOOOOOOOOOOOOOOO

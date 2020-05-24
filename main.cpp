@@ -23,7 +23,7 @@ ushort n, m;
 vector<rc> blacks, whites;
 ofstream out("output.txt");
 ifstream in("input.txt");
-stack<bitset<24>> states;
+stack<pair<rc, bitset<24>>> states;
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -51,11 +51,12 @@ void saveState(rc currentCell);
 
 // Restores the given state in the matrix (you must pass the cell in which it
 // was centered)
-void restoreState(bitset<24> state, rc centralCell);
+void restoreState(pair<rc, bitset<24>> state, rc centralCell);
 
 //-------Debug functions------------
 void stampaPercorso(stack<rc> original, char prossimaMossa);
 void stampaStatoMatrice(rc cell, int numciclo);
+void stampaStackCelle(stack<rc> stackCelle);
 
 int main(int argc, char **argv) {
   int B, W;
@@ -307,7 +308,8 @@ void solve() {
     start = rc(rand() % n, rand() % m);
   // Keeps track of the presence/absence of walls at a given time around the
   // cell, see https://imgur.com/a/9VC1ZLx for infos
-  states = stack<bitset<24>>();
+  states = stack<pair<rc, bitset<24>>>(); // TODO change back to just
+                                          // stack<bitset<24>>
   stack<rc> stackCelle = stack<rc>();
   stack<char> mosseDaFare = stack<char>(); // quando si pusha un nuovo gruppo si
                                            // mette 'T' all'inizio e si salva lo
@@ -361,9 +363,14 @@ void solve() {
       mosseDaFare.pop();
       if (dir == 'T') {
         stampaPercorso(stackCelle, dir);
-        stackCelle.pop();
         restoreState(states.top(), currentCell);
+        out << "\npopping stackCelle from";
+        stampaStackCelle(stackCelle);
+        stackCelle.pop();
+        out << "to";
+        stampaStackCelle(stackCelle);
         states.pop();
+        restoreState(states.top(), stackCelle.top());
         continue;
       } else {
         restoreState(states.top(), currentCell);
@@ -404,18 +411,30 @@ void solve() {
       }
     }
     { // put lateral walls in current cell to avoid intersecamenti strani
-      if (currentCell.first != start.first &&
+      if (currentCell.first != start.first ||
           currentCell.second != start.second) {
         if (dir == 'U' || dir == 'D') {
           matrix[currentCell.first][currentCell.second].L = false;
           matrix[currentCell.first][currentCell.second].R = false;
           wallIfPossible(currentCell.first, currentCell.second - 1, 'R');
           wallIfPossible(currentCell.first, currentCell.second + 1, 'L');
+          if (dir == 'D' && currentCell.first > 0 &&
+              matrix[currentCell.first - 1][currentCell.second].D)
+            matrix[currentCell.first - 1][currentCell.second].D = false;
+          else if (currentCell.first + 1 < n &&
+                   matrix[currentCell.first + 1][currentCell.second].U)
+            matrix[currentCell.first + 1][currentCell.second].U = false;
         } else {
           matrix[currentCell.first][currentCell.second].U = false;
           matrix[currentCell.first][currentCell.second].D = false;
           wallIfPossible(currentCell.first - 1, currentCell.second, 'D');
           wallIfPossible(currentCell.first + 1, currentCell.second, 'U');
+          if (dir == 'L' && currentCell.second + 1 < m &&
+              matrix[currentCell.first][currentCell.second + 1].L)
+            matrix[currentCell.first][currentCell.second + 1].L = false;
+          else if (currentCell.second > 0 &&
+                   matrix[currentCell.first][currentCell.second - 1].R)
+            matrix[currentCell.first][currentCell.second - 1].R = false;
         }
       }
     }
@@ -556,7 +575,7 @@ void saveState(rc currentCell) {
     state[6] = matrix[row][currentCell.second].D;
     state[7] = matrix[row][currentCell.second].R;
     if (currentCell.first > 1)
-      matrix[currentCell.first - 2][currentCell.second].U = state[20];
+      state[20] = matrix[currentCell.first - 2][currentCell.second].U;
   }
   if (currentCell.second > 0) {
     int col = currentCell.second - 1;
@@ -565,7 +584,7 @@ void saveState(rc currentCell) {
     state[10] = matrix[currentCell.first][col].D;
     state[11] = matrix[currentCell.first][col].R;
     if (currentCell.second > 1)
-      matrix[currentCell.first][currentCell.second - 2].L = state[21];
+      state[21] = matrix[currentCell.first][currentCell.second - 2].L;
   }
   if (currentCell.first + 1 < n) {
     int col = currentCell.first + 1;
@@ -574,7 +593,7 @@ void saveState(rc currentCell) {
     state[14] = matrix[col][currentCell.second].D;
     state[15] = matrix[col][currentCell.second].R;
     if (currentCell.first + 2 < n)
-      matrix[currentCell.first + 2][currentCell.second].D = state[22];
+      state[22] = matrix[currentCell.first + 2][currentCell.second].D;
   }
   if (currentCell.second + 1 < m) {
     int row = currentCell.second + 1;
@@ -583,15 +602,32 @@ void saveState(rc currentCell) {
     state[18] = matrix[currentCell.first][row].D;
     state[19] = matrix[currentCell.first][row].R;
     if (currentCell.second + 2 < m)
-      matrix[currentCell.first][currentCell.second + 2].R = state[23];
+      state[23] = matrix[currentCell.first][currentCell.second + 2].R;
   }
-  states.push(state);
+  states.push(pair<rc, bitset<24>>(currentCell, state));
+  // out << endl;
+  // for (int i = 0; i < 24; i++) {
+  //   if (i % 4 == 0 && i > 0)
+  //     out << " ";
+  //   out << state[i];
+  // }
 }
 
-void restoreState(bitset<24> state, rc center) {
+void restoreState(pair<rc, bitset<24>> paio, rc center) {
+  bitset<24> state = paio.second;
   cout << "\nrestoring state of cell " << center.first << " " << center.second;
-  out << "\nrestoring state centered in " << center.first << " "
-      << center.second;
+  out << "\nrestoring state centered in " << center.first << ","
+      << center.second << " w\\ state of " << paio.first.first << ","
+      << paio.first.second << " "
+      << (center.first == paio.first.first && center.second == paio.first.second
+              ? "OK"
+              : "NOOOOOOOOOOOOOOO");
+  // out << endl;
+  // for (int i = 0; i < 24; i++) {
+  //   if (i % 4 == 0 && i > 0)
+  //     out << " ";
+  //   out << state[i];
+  // }
   matrix[center.first][center.second].U = state[0];
   matrix[center.first][center.second].L = state[1];
   matrix[center.first][center.second].D = state[2];
@@ -691,5 +727,19 @@ void stampaStatoMatrice(rc cell, int k) {
     }
     out << endl << endl;
     cout << endl << endl;
+  }
+}
+
+void stampaStackCelle(stack<rc> stackCelle) {
+  out << endl;
+  stack<rc> stackCelle2 = stack<rc>();
+  while (!stackCelle.empty()) {
+    stackCelle2.push(stackCelle.top());
+    stackCelle.pop();
+  }
+  while (!stackCelle2.empty()) {
+    out << stackCelle2.top().first << "," << stackCelle2.top().second << "-";
+    stackCelle.push(stackCelle2.top());
+    stackCelle2.pop();
   }
 }
