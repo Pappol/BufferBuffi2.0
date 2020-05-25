@@ -37,6 +37,11 @@ ifstream in("input.txt");
 stack<bitset<24>> states;
 
 string ricostruisciPercorso(stack<rc> celle);
+string pathNeri(rc from, rc to, char dir);
+string pathNeroToBianco(rc from, rc to);
+string pathBiancoToNero(rc from, rc to);
+string pathB2B(rc from, rc to);
+string findPath(rc from, rc to);
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -83,8 +88,12 @@ int main() {
     //   return 0;
   }
   placeWalls();
-  rc v = findNear(rc(4, 4));
-  cout << v.first << " " << v.second;
+  // matrix[0][1].vis = true;
+  // matrix[1][2].vis = true;
+  // matrix[2][3].vis = true;
+  // matrix[2][1].vis = true;
+  matrix[3][3].vis = true;
+  cout << findPath(rc(4, 4), rc(0, 0));
   // Go
   goRadar();
 
@@ -325,7 +334,7 @@ string makePath(rc from, rc to, char dirArrivatiAFrom) {
   } else if (matrix[from.first][from.second].type == NERO &&
              matrix[to.first][to.second].type == BIANCO) {
     return pathNeroToBianco(from, to);
-  } else if (matrix[from.first][from.second].type == BIANO &&
+  } else if (matrix[from.first][from.second].type == BIANCO &&
              matrix[to.first][to.second].type == NERO) {
     return pathBiancoToNero(from, to);
   } else
@@ -393,6 +402,9 @@ string pathNeri(rc from, rc to, char dir) {
     }
   }
 }
+string pathNeroToBianco(rc from, rc to) {}
+string pathBiancoToNero(rc from, rc to) {}
+string pathB2B(rc from, rc to) {}
 
 int getDistance(rc from, rc to) {
   if (from.first < 0 || from.first >= n || to.first < 0 || to.first >= m)
@@ -404,7 +416,14 @@ string findPath(rc from, rc to) {
   set<distRC, dist_comp> pq = set<distRC, dist_comp>();
   stack<rc> celle = stack<rc>();
   rc current = from;
-  pq.insert(distRC(getDistance(from, to), current));
+  int baseDistance = getDistance(from, to);
+  int maxDist = 2 * baseDistance - 1; // at max go this far
+  bool visitedHere[n][m];
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < m; j++)
+      visitedHere[i][j] = false;
+  visitedHere[from.first][from.second] = true;
+  pq.insert(distRC(baseDistance, current));
   do {
     const distRC distancaECellaPiuVicina = *pq.begin();
     current = distancaECellaPiuVicina.second;
@@ -412,69 +431,95 @@ string findPath(rc from, rc to) {
     int pqSizeBefore = pq.size();
     {                          // aggiunge celle possibili
       if (current.first > 0) { // top
-        // if (current.second > 0) { // top left
-        //   rc tl = rc(current.first - 1, current.second - 1);
-        //   if (!matrix[tl.first][tl.second].vis) {
-        //     int distTL = getDistance(tl, to);
-        //     pq.insert(distRC(distTL, tl));
-        //   }
-        // }
-        // top center
+        {                      // top left
+          // if (current.second > 0) { // top left
+          //   rc tl = rc(current.first - 1, current.second - 1);
+          //   if (!matrix[tl.first][tl.second].vis) {
+          //     int distTL = getDistance(tl, to);
+          //     pq.insert(distRC(distTL, tl));
+          //   }
+          // }
+          // top center
+        }
         rc tc = rc(current.first - 1, current.second);
         if (!matrix[tc.first][tc.second].vis) {
           int distTC = getDistance(tc, to);
-          pq.insert(distRC(distTC, tc));
+          if (!visitedHere[tc.first][tc.second] && distTC <= maxDist) {
+            pq.insert(distRC(distTC, tc));
+            visitedHere[tc.first][tc.second] = true;
+          }
         }
-        // if (current.second + 1 < m) { // top right
-        //   rc tr = rc(current.first - 1, current.second + 1);
-        //   if (!matrix[tr.first][tr.second].vis) {
-        //     int distrRR = getDistance(tr, to);
-        //     pq.insert(distRC(distrRR, tr));
-        //   }
-        // }
+        { // top right
+          // if (current.second + 1 < m) { // top right
+          //   rc tr = rc(current.first - 1, current.second + 1);
+          //   if (!matrix[tr.first][tr.second].vis) {
+          //     int distrRR = getDistance(tr, to);
+          //     pq.insert(distRC(distrRR, tr));
+          //   }
+          // }
+        }
       }
       if (current.second + 1 < m) { // right
         if (!matrix[current.first][current.second + 1].vis) {
           rc rr = rc(current.first, current.second + 1);
           int distrRR = getDistance(rr, to);
-          pq.insert(distRC(distrRR, rr));
+          if (!visitedHere[rr.first][rr.second] && distrRR <= maxDist) {
+            pq.insert(distRC(distrRR, rr));
+            visitedHere[rr.first][rr.second] = true;
+          }
         }
       }
       if (current.second > 0) { // left
         if (!matrix[current.first][current.second - 1].vis) {
           rc ll = rc(current.first, current.second - 1);
-          int distrLL = getDistance(ll, to);
-          pq.insert(distRC(distrLL, ll));
+          int distLL = getDistance(ll, to);
+          if (!visitedHere[ll.first][ll.second] && distLL <= maxDist) {
+            pq.insert(distRC(distLL, ll));
+            visitedHere[ll.first][ll.second] = true;
+          }
         }
       }
       if (current.first + 1 < n) { // bottom
-        // if (current.second > 0) {  // bl
-        //   rc bl = rc(current.first + 1, current.second - 1);
-        //   if (!matrix[bl.first][bl.second].vis) {
-        //     int distBL = getDistance(bl, to);
-        //     pq.insert(distRC(distBL, bl));
-        //   }
-        // }
+        {                          // bottom left
+          // if (current.second > 0) {  // bl
+          //   rc bl = rc(current.first + 1, current.second - 1);
+          //   if (!matrix[bl.first][bl.second].vis) {
+          //     int distBL = getDistance(bl, to);
+          //     pq.insert(distRC(distBL, bl));
+          //   }
+          // }
+        }
         // center
         rc bcenter = rc(current.first + 1, current.second);
         if (!matrix[bcenter.first][bcenter.second].vis) {
           int distBC = getDistance(bcenter, to);
-          pq.insert(distRC(distBC, bcenter));
+          if (!visitedHere[bcenter.first][bcenter.second] &&
+              distBC <= maxDist) {
+            pq.insert(distRC(distBC, bcenter));
+            visitedHere[bcenter.first][bcenter.second] = true;
+          }
         }
-        // if (current.second + 1 < m) { // br
-        //   rc br = rc(current.first + 1, current.second + 1);
-        //   if (!matrix[br.first][br.second].vis) {
-        //     int distBR = getDistance(br, to);
-        //     pq.insert(distRC(distBR, br));
-        //   }
-        // }
+        { // bottom right
+          // if (current.second + 1 < m) { // br
+          //   rc br = rc(current.first + 1, current.second + 1);
+          //   if (!matrix[br.first][br.second].vis) {
+          //     int distBR = getDistance(br, to);
+          //     pq.insert(distRC(distBR, br));
+          //   }
+          // }
+        }
       }
     }
     if (pq.size() == pqSizeBefore)
       celle.pop();
+    pq.erase(distancaECellaPiuVicina);
   } while (!pq.empty() &&
            (current.first != to.first || current.second != to.second));
-  return ricostruisciPercorso(celle);
+  celle.push(current);
+  if (current.first == to.first && current.second == to.second)
+    return ricostruisciPercorso(celle);
+  else
+    return "paccone";
 }
 
 string ricostruisciPercorso(stack<rc> celle) {
