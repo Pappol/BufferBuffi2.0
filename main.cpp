@@ -1,6 +1,7 @@
 //#include "./swrace.h"
 #include <bits/stdc++.h>
 #include <fstream>
+#include <set>
 #define VUOTO 0
 #define BIANCO 1
 #define NERO 2
@@ -8,6 +9,14 @@
 using namespace std;
 // Pair: row and column
 typedef pair<ushort, ushort> rc;
+// distance and row, column
+typedef pair<int, rc> distRC;
+
+struct dist_comp {
+  bool operator()(const distRC &lhs, const distRC &rhs) const {
+    return lhs.first < rhs.first;
+  }
+};
 
 // Cell data structure
 typedef struct {
@@ -26,6 +35,8 @@ vector<rc> blacks, whites;
 ofstream out("output.txt");
 ifstream in("input.txt");
 stack<bitset<24>> states;
+
+string ricostruisciPercorso(stack<rc> celle);
 
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
@@ -68,10 +79,12 @@ int main() {
   }
   // Checking if a rectangle could be the optimal solution
   if (W <= 8 && B <= 4) {
-    if (checkForRectangles() == B + W)
-      return 0;
+    // if (checkForRectangles() == B + W)
+    //   return 0;
   }
   placeWalls();
+  rc v = findNear(rc(4, 4));
+  cout << v.first << " " << v.second;
   // Go
   goRadar();
 
@@ -238,42 +251,254 @@ void goRadar() {
 }
 
 rc findNear(rc pos) {
-  for (int misuraLato = 1; misuraLato <= max(n, m) / 2; misuraLato++) {
+  rc bestCell = rc(n, m);
+  float bestDistance = 99999999;
+  for (int misuraLato = 1; misuraLato <= max(n, m); misuraLato++) {
+    if (bestCell.first != n)
+      return bestCell;
+
     if (pos.first - misuraLato >= 0) { // top
       int row = pos.first - misuraLato;
       for (int i = -misuraLato; i <= misuraLato; i++) {
         cell c = matrix[row][pos.second + i];
-        if (c.type != VUOTO && !c.vis)
-          return rc(row, pos.second + i);
+        if (c.type != VUOTO && !c.vis) {
+          float distance =
+              pow(pos.first - row, 2) + pow(pos.second - pos.second + i, 2);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestCell = rc(row, pos.second + i);
+          }
+        }
       }
     }
     if (pos.first + misuraLato < n) { // bottom
       int row = pos.first + misuraLato;
       for (int i = -misuraLato; i <= misuraLato; i++) {
         cell c = matrix[row][pos.second + i];
-        if (c.type != VUOTO && !c.vis)
-          return rc(row, pos.second + i);
+        if (c.type != VUOTO && !c.vis) {
+          float distance =
+              pow(pos.first - row, 2) + pow(pos.second - pos.second + i, 2);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestCell = rc(row, pos.second + i);
+          }
+        }
       }
     }
     if (pos.second - misuraLato >= 0) { // left
       int col = pos.second - misuraLato;
       for (int i = -misuraLato + 1; i < misuraLato; i++) {
         cell c = matrix[pos.first + i][col];
-        if (c.type != VUOTO && !c.vis)
-          return rc(pos.first + i, col);
+        if (c.type != VUOTO && !c.vis) {
+          float distance =
+              pow(pos.first - pos.first + i, 2) + pow(pos.second - col, 2);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestCell = rc(pos.first + i, col);
+          }
+        }
       }
     }
     if (pos.second + misuraLato < m) { // right
       int col = pos.second + misuraLato;
       for (int i = -misuraLato + 1; i < misuraLato; i++) {
         cell c = matrix[pos.first + i][col];
-        if (c.type != VUOTO && !c.vis)
-          return rc(pos.first + i, col);
+        if (c.type != VUOTO && !c.vis) {
+          float distance =
+              pow(pos.first - pos.first + i, 2) + pow(pos.second - col, 2);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestCell = rc(pos.first + i, col);
+          }
+        }
       }
+    }
+  }
+  return pos;
+}
+
+string makePath(rc from, rc to, char dirArrivatiAFrom) {
+  stringbuf percorsoParz = stringbuf();
+  if (matrix[from.first][from.second].type == NERO &&
+      matrix[to.first][to.second].type == NERO) {
+    return pathNeri(from, to, dirArrivatiAFrom);
+  } else if (matrix[from.first][from.second].type == NERO &&
+             matrix[to.first][to.second].type == BIANCO) {
+    return pathNeroToBianco(from, to);
+  } else if (matrix[from.first][from.second].type == BIANO &&
+             matrix[to.first][to.second].type == NERO) {
+    return pathBiancoToNero(from, to);
+  } else
+    return pathB2B(from, to);
+
+  if (from.first == to.first) { // stessa riga
+    int dist = from.second - to.second;
+    if (dist > 0) {
+      for (int i = 0; i < dist; i++) {
+        percorsoParz.sputc('L');
+      }
+    } else {
+      dist *= -1;
+      for (int i = 0; i < dist; i++) {
+        percorsoParz.sputc('R');
+      }
+    }
+  }
+
+  if (from.second == to.second) { // stessa colonna
+    int dist = from.first - to.first;
+    if (dist > 0) {
+      for (int i = 0; i < dist; i++) {
+        percorsoParz.sputc('U');
+      }
+    } else {
+      dist *= -1;
+      for (int i = 0; i < dist; i++) {
+        percorsoParz.sputc('D');
+      }
+    }
+  }
+
+  int distVert = from.second - to.second;
+  int distOriz = from.first - to.first;
+
+  bool sopra, sotto, dx, sx;
+  sopra = distVert > 0;
+  sotto = distVert < 0;
+  dx = distOriz < 0;
+  sx = distOriz > 0;
+
+  distVert = abs(distVert) / 2;
+  distOriz = abs(distOriz) / 2;
+
+  if (sopra && dx) {
+  }
+}
+
+string pathNeri(rc from, rc to, char dir) {
+  stringbuf result = stringbuf();
+  int distVert = from.second - to.second;
+  int distOriz = from.first - to.first;
+  bool sopra, sotto, dx, sx;
+  sopra = distVert > 0;
+  sotto = distVert < 0;
+  dx = distOriz < 0;
+  sx = distOriz > 0;
+
+  distVert = abs(distVert) / 2;
+  distOriz = abs(distOriz) / 2;
+
+  if (sopra && dx) {
+    if (dir == 'R') {
     }
   }
 }
 
-string makePath(rc from, rc to) {
-  
+int getDistance(rc from, rc to) {
+  if (from.first < 0 || from.first >= n || to.first < 0 || to.first >= m)
+    return 9999999;
+  return pow(from.first - to.first, 2) + pow(from.second - to.second, 2);
+}
+
+string findPath(rc from, rc to) {
+  set<distRC, dist_comp> pq = set<distRC, dist_comp>();
+  stack<rc> celle = stack<rc>();
+  rc current = from;
+  pq.insert(distRC(getDistance(from, to), current));
+  do {
+    const distRC distancaECellaPiuVicina = *pq.begin();
+    current = distancaECellaPiuVicina.second;
+    celle.push(current);
+    int pqSizeBefore = pq.size();
+    {                          // aggiunge celle possibili
+      if (current.first > 0) { // top
+        // if (current.second > 0) { // top left
+        //   rc tl = rc(current.first - 1, current.second - 1);
+        //   if (!matrix[tl.first][tl.second].vis) {
+        //     int distTL = getDistance(tl, to);
+        //     pq.insert(distRC(distTL, tl));
+        //   }
+        // }
+        // top center
+        rc tc = rc(current.first - 1, current.second);
+        if (!matrix[tc.first][tc.second].vis) {
+          int distTC = getDistance(tc, to);
+          pq.insert(distRC(distTC, tc));
+        }
+        // if (current.second + 1 < m) { // top right
+        //   rc tr = rc(current.first - 1, current.second + 1);
+        //   if (!matrix[tr.first][tr.second].vis) {
+        //     int distrRR = getDistance(tr, to);
+        //     pq.insert(distRC(distrRR, tr));
+        //   }
+        // }
+      }
+      if (current.second + 1 < m) { // right
+        if (!matrix[current.first][current.second + 1].vis) {
+          rc rr = rc(current.first, current.second + 1);
+          int distrRR = getDistance(rr, to);
+          pq.insert(distRC(distrRR, rr));
+        }
+      }
+      if (current.second > 0) { // left
+        if (!matrix[current.first][current.second - 1].vis) {
+          rc ll = rc(current.first, current.second - 1);
+          int distrLL = getDistance(ll, to);
+          pq.insert(distRC(distrLL, ll));
+        }
+      }
+      if (current.first + 1 < n) { // bottom
+        // if (current.second > 0) {  // bl
+        //   rc bl = rc(current.first + 1, current.second - 1);
+        //   if (!matrix[bl.first][bl.second].vis) {
+        //     int distBL = getDistance(bl, to);
+        //     pq.insert(distRC(distBL, bl));
+        //   }
+        // }
+        // center
+        rc bcenter = rc(current.first + 1, current.second);
+        if (!matrix[bcenter.first][bcenter.second].vis) {
+          int distBC = getDistance(bcenter, to);
+          pq.insert(distRC(distBC, bcenter));
+        }
+        // if (current.second + 1 < m) { // br
+        //   rc br = rc(current.first + 1, current.second + 1);
+        //   if (!matrix[br.first][br.second].vis) {
+        //     int distBR = getDistance(br, to);
+        //     pq.insert(distRC(distBR, br));
+        //   }
+        // }
+      }
+    }
+    if (pq.size() == pqSizeBefore)
+      celle.pop();
+  } while (!pq.empty() &&
+           (current.first != to.first || current.second != to.second));
+  return ricostruisciPercorso(celle);
+}
+
+string ricostruisciPercorso(stack<rc> celle) {
+  int numCelle = celle.size();
+  stringbuf res = stringbuf();
+  rc celleVero[numCelle];
+  for (int i = 0; i < numCelle; i++) {
+    celleVero[numCelle - i - 1] = celle.top();
+    celle.pop();
+  }
+  rc cella = celleVero[0];
+  for (int i = 1; i < numCelle; i++) {
+    matrix[cella.first][cella.second].vis = true;
+    rc nuova = celleVero[i];
+    if (cella.first < nuova.first)
+      res.sputc('D');
+    else if (cella.first != nuova.first)
+      res.sputc('U');
+    else if (cella.second < nuova.second)
+      res.sputc('R');
+    else
+      res.sputc('L');
+    cella = nuova;
+  }
+  matrix[cella.first][cella.second].vis = true;
+  return res.str();
 }
