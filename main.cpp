@@ -36,22 +36,20 @@ ofstream out("output.txt");
 ifstream in("input.txt");
 stack<bitset<24>> states;
 
-string ricostruisciPercorso(stack<rc> celle);
-string pathNeri(rc from, rc to, char dir);
-string pathNeroToBianco(rc from, rc to);
-string pathBiancoToNero(rc from, rc to);
-string pathB2B(rc from, rc to);
-string findPath(rc from, rc to);
-
 // Checks for an optimal rectangular solution. If it is found it is printed and
 // the program exits w/ code 0. If a solution is found but it's not optimal it
 // gets printed anyway. Returns ring count w/ a rectangular solution.
 int checkForRectangles();
-void goRadar();
-void placeWalls();
 
 // Finds nearest non-visited ring
 rc findNear(rc pos);
+vector<pair<rc, string>> esciDaNero(rc nero, char dir);
+vector<pair<rc, string>> entraInNero(rc nero, rc other);
+vector<pair<rc, string>> esciDaBianco(rc bianco, char dir, char prevDir);
+vector<pair<rc, string>> entraInBianco(rc bianco);
+void goRadar();
+string ricostruisciPercorso(stack<rc> celle);
+string findPath(rc from, rc to);
 
 int main() {
   int B, W;
@@ -87,13 +85,8 @@ int main() {
     // if (checkForRectangles() == B + W)
     //   return 0;
   }
-  placeWalls();
-  matrix[0][1].vis = true;
-  matrix[4][5].vis = true;
-  matrix[3][4].vis = true;
-  matrix[4][3].vis = true;
 
-  cout << findPath(rc(4, 4), rc(0, 0));
+  cout << findPath(rc(4, 4), rc(4, 5));
   // Go
   goRadar();
 
@@ -160,95 +153,6 @@ int checkForRectangles() {
   out << anelli << " " << s.length() << " " << topLeft.first << " "
       << topLeft.second << " " << s << "#" << endl;
   return anelli;
-}
-
-void placeWalls() {
-  bool addedSomeWalls;
-  int border = 0;
-  do {
-    addedSomeWalls = false;
-    int n1 = n - border;
-    int m1 = m - border;
-    for (int j = border; j < m1; j++) { // BLUE  TOP
-      cell c = matrix[border][j];
-      if (c.type == BIANCO && c.U == false) {
-        matrix[border][j].D = false;
-        matrix[border + 1][j].U = false;
-        addedSomeWalls = true;
-      }
-    }
-    for (int i = border; i < n1; i++) { // BLUE  RIGHT
-      cell c = matrix[i][m1 - 1];
-      if (c.type == BIANCO && c.R == false) {
-        matrix[i][m1 - 1].L = false;
-        matrix[i][m1 - 2].R = false;
-        addedSomeWalls = true;
-      }
-    }
-    for (int j = border; j < m1; j++) { // BLUE  BOTTOM
-      cell c = matrix[n1 - 1][j];
-      if (c.type == BIANCO && c.D == false) {
-        matrix[n1 - 1][j].U = false;
-        matrix[n1 - 2][j].D = false;
-        addedSomeWalls = true;
-      }
-    }
-    for (int i = border; i < n1; i++) { // BLUE LEFT
-      cell c = matrix[i][border];
-      if (c.type == BIANCO && c.L == false) {
-        matrix[i][border].R = false;
-        matrix[i][border + 1].L = false;
-        addedSomeWalls = true;
-      }
-    }
-    border++;
-  } while (addedSomeWalls);
-
-  for (int i = 1; i < n; i++) // GREEN VERTICAL
-    for (int j = 0; j < m; j++)
-      if (matrix[i][j].type == BIANCO && matrix[i - 1][j].type == BIANCO &&
-          matrix[i - 1][j].D == true) {
-        // Laterali (verticali)
-        matrix[i][j].L = matrix[i][j].R = false;
-        matrix[i - 1][j].L = matrix[i - 1][j].R = false;
-        if (j + 1 < m)
-          matrix[i - 1][j + 1].L = matrix[i][j + 1].L = false;
-        if (j - 1 > 0)
-          matrix[i - 1][j - 1].R = matrix[i][j - 1].R = false;
-        if (i - 2 >= 0) {
-          matrix[i - 2][j].U = false;
-          if (i - 3 >= 0)
-            matrix[i - 3][j].D = false;
-        }
-        if (i + 1 < n) {
-          matrix[i + 1][j].D = false;
-          if (i + 2 < n)
-            matrix[i + 2][j].U = false;
-        }
-      }
-  for (int j = 1; j < m; j++) // GREEN HORIZONTAL
-    for (int i = 0; i < n; i++)
-      if (matrix[i][j].type == BIANCO && matrix[i][j - 1].type == BIANCO &&
-          matrix[i][j - 1].R == true) {
-        // Laterali (orizzontali)
-        matrix[i][j].U = matrix[i][j].D = false;
-        matrix[i][j - 1].U = matrix[i][j - 1].D = false;
-        if (i - 1 >= 0)
-          matrix[i - 1][j].D = matrix[i - 1][j - 1].D = false;
-        if (i + 1 < n)
-          matrix[i + 1][j].U = matrix[i + 1][j - 1].U = false;
-        if (j - 2 >= 0) {
-          matrix[i][j - 2].L = false;
-          if (j - 3 >= 0)
-            matrix[i][j - 3].R = false;
-        }
-        if (j + 1 < m) {
-          matrix[i][j + 1].R = false;
-          if (j + 2 < m)
-            matrix[i][j + 2].L = false;
-        }
-      }
-  // TODO: rosa
 }
 
 void goRadar() {
@@ -326,85 +230,196 @@ rc findNear(rc pos) {
   return pos;
 }
 
-string makePath(rc from, rc to, char dirArrivatiAFrom) {
-  stringbuf percorsoParz = stringbuf();
-  if (matrix[from.first][from.second].type == NERO &&
-      matrix[to.first][to.second].type == NERO) {
-    return pathNeri(from, to, dirArrivatiAFrom);
-  } else if (matrix[from.first][from.second].type == NERO &&
-             matrix[to.first][to.second].type == BIANCO) {
-    return pathNeroToBianco(from, to);
-  } else if (matrix[from.first][from.second].type == BIANCO &&
-             matrix[to.first][to.second].type == NERO) {
-    return pathBiancoToNero(from, to);
-  } else
-    return pathB2B(from, to);
-
-  if (from.first == to.first) { // stessa riga
-    int dist = from.second - to.second;
-    if (dist > 0) {
-      for (int i = 0; i < dist; i++) {
-        percorsoParz.sputc('L');
-      }
-    } else {
-      dist *= -1;
-      for (int i = 0; i < dist; i++) {
-        percorsoParz.sputc('R');
-      }
+vector<pair<rc, string>> esciDaNero(rc nero, char dir) {
+  vector<pair<rc, string>> res = vector<pair<rc, string>>();
+  if (dir == 'U' || dir == 'D') {
+    if (nero.second - 2 > 0 && !matrix[nero.first][nero.second - 1].vis &&
+        !matrix[nero.first][nero.second - 2].vis) {
+      res.push_back(pair<rc, string>(rc(nero.first, nero.second - 2), "LL"));
+    }
+    if (nero.second + 2 < n && !matrix[nero.first][nero.second + 1].vis &&
+        !matrix[nero.first][nero.second + 2].vis) {
+      res.push_back(pair<rc, string>(rc(nero.first, nero.second + 2), "RR"));
+    }
+  } else {
+    if (nero.first - 2 > 0 && !matrix[nero.first - 1][nero.second].vis &&
+        !matrix[nero.first - 2][nero.second].vis) {
+      res.push_back(pair<rc, string>(rc(nero.first - 2, nero.second), "UU"));
+    }
+    if (nero.first + 2 < n && !matrix[nero.first + 1][nero.second].vis &&
+        !matrix[nero.first + 2][nero.second].vis) {
+      res.push_back(pair<rc, string>(rc(nero.first + 2, nero.second), "DD"));
     }
   }
+  return res;
+}
 
-  if (from.second == to.second) { // stessa colonna
-    int dist = from.first - to.first;
-    if (dist > 0) {
-      for (int i = 0; i < dist; i++) {
-        percorsoParz.sputc('U');
-      }
-    } else {
-      dist *= -1;
-      for (int i = 0; i < dist; i++) {
-        percorsoParz.sputc('D');
+vector<pair<rc, string>> entraInNero(rc nero, rc other) {
+  vector<pair<rc, string>> sol = vector<pair<rc, string>>();
+  if (nero.first - 1 > 0) // top
+    if (!matrix[nero.first - 1][nero.second].vis)
+      if (!matrix[nero.first - 2][nero.second].vis)
+        sol.push_back(pair<rc, string>(rc(nero.first - 2, nero.second), "DD"));
+  if (nero.second - 1 > 0) // left
+    if (!matrix[nero.first][nero.second - 1].vis)
+      if (!matrix[nero.first][nero.second - 2].vis)
+        sol.push_back(pair<rc, string>(rc(nero.first, nero.second - 2), "RR"));
+  if (nero.first + 2 < n) // bottom
+    if (!matrix[nero.first + 1][nero.second].vis)
+      if (!matrix[nero.first + 2][nero.second].vis)
+        sol.push_back(pair<rc, string>(rc(nero.first + 2, nero.second), "UU"));
+  if (nero.second + 2 < m) { // left
+    if (!matrix[nero.first][nero.second + 1].vis) {
+      if (!matrix[nero.first][nero.second + 2].vis) {
+        sol.push_back(pair<rc, string>(rc(nero.first, nero.second + 2), "LL"));
+        return sol;
       }
     }
-  }
-
-  int distVert = from.second - to.second;
-  int distOriz = from.first - to.first;
-
-  bool sopra, sotto, dx, sx;
-  sopra = distVert > 0;
-  sotto = distVert < 0;
-  dx = distOriz < 0;
-  sx = distOriz > 0;
-
-  distVert = abs(distVert) / 2;
-  distOriz = abs(distOriz) / 2;
-
-  if (sopra && dx) {
   }
 }
 
-string pathNeri(rc from, rc to, char dir) {
-  stringbuf result = stringbuf();
-  int distVert = from.second - to.second;
-  int distOriz = from.first - to.first;
-  bool sopra, sotto, dx, sx;
-  sopra = distVert > 0;
-  sotto = distVert < 0;
-  dx = distOriz < 0;
-  sx = distOriz > 0;
+vector<pair<rc, string>> esciDaBianco(rc bianco, char dir, char prevDir) {
+  vector<pair<rc, string>> sol = vector<pair<rc, string>>();
+  if (dir != prevDir) { // entra con curva, esci dritto
+    if (dir == 'U' && bianco.second - 1 > 0 &&
+        !matrix[bianco.first][bianco.second - 1].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first, bianco.second - 1), "U"));
 
-  distVert = abs(distVert) / 2;
-  distOriz = abs(distOriz) / 2;
+    } else if (dir == 'D' && bianco.second + 1 < m &&
+               !matrix[bianco.first][bianco.second + 1].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first, bianco.second + 1), "D"));
 
-  if (sopra && dx) {
-    if (dir == 'R') {
+    } else if (dir == 'R' && bianco.first + 1 < n &&
+               !matrix[bianco.first + 1][bianco.second].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first + 1, bianco.second), "R"));
+
+    } else if (dir == 'L' && bianco.first - 1 > 0 &&
+               !matrix[bianco.first - 1][bianco.second].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first - 1, bianco.second), "L"));
+    }
+  } else {
+    if (dir == 'U' && bianco.second - 1 > 0 &&
+        !matrix[bianco.first][bianco.second - 1].vis) {
+      if (bianco.first - 1 > 0 &&
+          !matrix[bianco.first - 1][bianco.second - 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first, bianco.second - 1), "UL"));
+      if (bianco.first + 1 < n &&
+          !matrix[bianco.first - 1][bianco.second - 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first, bianco.second - 1), "UR"));
+
+    } else if (dir == 'D' && bianco.second + 1 < m &&
+               !matrix[bianco.first][bianco.second + 1].vis) {
+      if (bianco.first - 1 > 0 &&
+          !matrix[bianco.first - 1][bianco.second + 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first - 1, bianco.second + 1), "DL"));
+      if (bianco.first + 1 < n &&
+          !matrix[bianco.first + 1][bianco.second + 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first + 1, bianco.second + 1), "DL"));
+
+    } else if (dir == 'R' && bianco.first + 1 < n &&
+               !matrix[bianco.first + 1][bianco.second].vis) {
+      if (bianco.second - 1 > 0 &&
+          !matrix[bianco.first + 1][bianco.second - 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first + 1, bianco.second - 1), "RD"));
+      if (bianco.second + 1 < m &&
+          !matrix[bianco.first + 1][bianco.second + 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first + 1, bianco.second + 1), "RU"));
+
+    } else if (dir == 'L' && bianco.first - 1 > 0 &&
+               !matrix[bianco.first - 1][bianco.second].vis) {
+      if (bianco.second - 1 > 0 &&
+          !matrix[bianco.first + 1][bianco.second - 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first - 1, bianco.second - 1), "LU"));
+      if (bianco.second + 1 < m &&
+          !matrix[bianco.first + 1][bianco.second + 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first - 1, bianco.second + 1), "LU"));
     }
   }
+  return sol;
 }
-string pathNeroToBianco(rc from, rc to) {}
-string pathBiancoToNero(rc from, rc to) {}
-string pathB2B(rc from, rc to) {}
+
+vector<pair<rc, string>> entraInBianco(rc bianco) {
+  vector<pair<rc, string>> sol = vector<pair<rc, string>>();
+  int row = bianco.first;
+  int col = bianco.second;
+  rc tl, tr, bl, br;
+  tl = tr = bl = br = bianco;
+  tl.first--;
+  tl.second--;
+  tr.first--;
+  tr.second++;
+  bl.first++;
+  bl.second--;
+  br.first++;
+  br.second++;
+  bool arriveFromTop, arriveFromBottom, arriveFromLeft, arriveFromRight;
+  arriveFromTop = arriveFromBottom = arriveFromLeft = arriveFromRight = false;
+  if (tl.first >= 0 && tr.second >= 0) { // TL
+    if (!matrix[row - 1][col].vis) {     // tl->t
+      sol.push_back(pair<rc, string>(tl, "RD"));
+      arriveFromTop = true;
+      arriveFromLeft = true;
+    }
+    if (!matrix[row][col - 1].vis) { // tl->l
+      arriveFromTop = true;
+      arriveFromLeft = true;
+      sol.push_back(pair<rc, string>(tl, "DR"));
+    }
+  }
+  if (tr.first >= 0 && tr.first < n && tr.second < m) { // TR
+    if (!matrix[row - 1][col].vis) {                    // tr->t
+      sol.push_back(pair<rc, string>(tr, "LD"));
+      arriveFromTop = true;
+      arriveFromRight = true;
+    }
+    if (!matrix[row][col + 1].vis) { // tr->r
+      sol.push_back(pair<rc, string>(tr, "DL"));
+      arriveFromTop = true;
+      arriveFromRight = true;
+    }
+  }
+  if (bl.first < n && bl.second >= 0) { // BL
+    if (!matrix[row + 1][col].vis) {    // bl->b
+      sol.push_back(pair<rc, string>(bl, "RU"));
+      arriveFromBottom = true;
+      arriveFromLeft = true;
+    }
+    if (!matrix[row][col - 1].vis) { // bl->l
+      sol.push_back(pair<rc, string>(bl, "UR"));
+      arriveFromBottom = true;
+      arriveFromLeft = true;
+    }
+  }
+  if (br.first < n && br.second < m) { // BR
+    if (!matrix[row + 1][col].vis) {   // br->b
+      sol.push_back(pair<rc, string>(br, "LU"));
+      arriveFromBottom = true;
+      arriveFromRight = true;
+    }
+    if (!matrix[row][col + 1].vis) { // br->r
+      sol.push_back(pair<rc, string>(br, "UL"));
+      arriveFromBottom = true;
+      arriveFromRight = true;
+    }
+  }
+  if (!arriveFromTop && row > 0 && !matrix[row - 1][col].vis)
+    sol.push_back(pair<rc, string>(rc(row - 1, col), "D"));
+  if (!arriveFromBottom && row + 1 < n && !matrix[row + 1][col].vis)
+    sol.push_back(pair<rc, string>(rc(row + 1, col), "U"));
+  if (!arriveFromLeft && col > 0 && !matrix[row][col - 1].vis)
+    sol.push_back(pair<rc, string>(rc(row, col - 1), "R"));
+  if (!arriveFromRight && col + 1 < m && !matrix[row][col + 1].vis)
+    sol.push_back(pair<rc, string>(rc(row, col + 1), "L"));
+  return sol;
+}
 
 int getDistance(rc from, rc to) {
   if (from.first < 0 || from.first >= n || to.first < 0 || to.first >= m)
