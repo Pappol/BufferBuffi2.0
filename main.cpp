@@ -1,4 +1,4 @@
-#include "./swrace.h"
+//#include "./swrace.h"
 #include <bits/stdc++.h>
 #include <fstream>
 #define VUOTO 0
@@ -33,6 +33,9 @@ stack<bitset<24>> states;
 int checkForRectangles();
 void goRadar();
 void placeWalls();
+
+// Finds nearest non-visited ring
+rc findNear(rc pos);
 
 int main() {
   int B, W;
@@ -234,67 +237,43 @@ void goRadar() {
   vector<bool> visited = vector<bool>(blacks.size());
 }
 
-bool controlDiag(char dir, rc cella) {
-  switch (dir) {
-  case 'A':
-    return cella.first > 0 && cella.second + 1 < m;
-  case 'B':
-    return cella.first + 1 < n && cella.second + 1 < m;
-  case 'C':
-    return cella.first + 1 < n && cella.second > 0;
-  case 'D':
-    return cella.first > 0 && cella.second > 0;
-  }
-}
-
 rc findNear(rc pos) {
-  int giro = 0;
-  int misuraLato = 2;
-  rc u1, u2, l1, l2, r1, r2, d1, d2;
-  u1 = u2 = l1 = l2 = r1 = r2 = d1 = d2 = pos;
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < misuraLato; i++) {
-      switch (j) {
-      case 0: // UP
-        if (controlDiag('A', u2) && controlDiag('D', u1)) {
-          u1.first--;
-          u1.second--;
-          u2.first--;
-          if (giro != 0)
-            u2.second++;
-        }
-        break;
-      case 1: // LEFT
-        if (controlDiag('A', r1) && controlDiag('B', r2)) {
-          r1.first--;
-          r1.second++;
-          r2.first++;
-          if (giro != 0)
-            r2.second++;
-        }
-        break;
-      case 2: // DOWN
-        if (controlDiag('B', d1) && controlDiag('C', d2)) {
-          d1.first++;
-          d1.second++;
-          d2.first++;
-          if (giro != 0)
-            d2.second--;
-        }
-        break;
-      case 3: // RIGHT
-        if (controlDiag('C', l1) && controlDiag('D', l2)) {
-          l1.first++;
-          l1.second--;
-          l2.first--;
-          if (giro != 0)
-            l2.second--;
-        }
-        break;
+  for (int misuraLato = 1; misuraLato <= max(n, m) / 2; misuraLato++) {
+    if (pos.first - misuraLato >= 0) { // top
+      int row = pos.first - misuraLato;
+      for (int i = -misuraLato; i <= misuraLato; i++) {
+        cell c = matrix[row][pos.second + i];
+        if (c.type != VUOTO && !c.vis)
+          return rc(row, pos.second + i);
+      }
+    }
+    if (pos.first + misuraLato < n) { // bottom
+      int row = pos.first + misuraLato;
+      for (int i = -misuraLato; i <= misuraLato; i++) {
+        cell c = matrix[row][pos.second + i];
+        if (c.type != VUOTO && !c.vis)
+          return rc(row, pos.second + i);
+      }
+    }
+    if (pos.second - misuraLato >= 0) { // left
+      int col = pos.second - misuraLato;
+      for (int i = -misuraLato + 1; i < misuraLato; i++) {
+        cell c = matrix[pos.first + i][col];
+        if (c.type != VUOTO && !c.vis)
+          return rc(pos.first + i, col);
+      }
+    }
+    if (pos.second + misuraLato < m) { // right
+      int col = pos.second + misuraLato;
+      for (int i = -misuraLato + 1; i < misuraLato; i++) {
+        cell c = matrix[pos.first + i][col];
+        if (c.type != VUOTO && !c.vis)
+          return rc(pos.first + i, col);
       }
     }
   }
 }
 
-string makePath(rc from, rc to){
+string makePath(rc from, rc to) {
+  
 }
