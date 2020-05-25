@@ -216,8 +216,8 @@ pair<char, rc> findNeroBelo() {
     bool whiteTop, whiteBottom, whiteLeft, whiteRight;
     whiteTop = white(black.first--, black.second);
     whiteBottom = white(black.first++, black.second);
-    whiteLeft = white(black.first++, black.second);
-    whiteRight = white(black.first++, black.second);
+    whiteLeft = white(black.first, black.second--);
+    whiteRight = white(black.first, black.second++);
     if (whiteTop && (whiteLeft || whiteRight))
       return pair<char, rc>('D', black);
     if (whiteBottom && (whiteLeft || whiteRight))
