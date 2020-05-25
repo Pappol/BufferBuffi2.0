@@ -47,10 +47,11 @@ vector<pair<rc, string>> esciDaNero(rc nero, char dir);
 vector<pair<rc, string>> entraInNero(rc nero, rc other);
 vector<pair<rc, string>> esciDaBianco(rc bianco, char dir, char prevDir);
 vector<pair<rc, string>> entraInBianco(rc bianco);
+int getDistance(rc from, rc to);
 void goRadar();
 string ricostruisciPercorso(stack<rc> celle);
 string findPath(rc from, rc to);
-pair<char, rc> findNeroBelo();
+tuple<string, rc, rc, int> findNeroBelo();
 
 int main() {
   int B, W;
@@ -161,19 +162,41 @@ void goRadar() {
     for (int j = 0; j < m; j++)
       matrix[i][j].vis = false;
   char previousDir, dir;
-  pair<char, rc> cAndB = findNeroBelo();
-  char c = cAndB.first;
-  rc nodoCorrente = cAndB.second;
-  bool found = true;
   stringbuf percorsoFinale = stringbuf();
-  int anelliAttraversati = 0;
+  tuple<string, rc, rc, int> tutteInfo = findNeroBelo();
+
+  string c = get<0>(tutteInfo);
+  dir = c[c.length() - 1];
+  for (char caratterre : c)
+    percorsoFinale.sputc(caratterre);
+
+  rc start = get<1>(tutteInfo);
+  rc end = get<2>(tutteInfo);
+  matrix[end.first][end.second].vis = true;
+  int anelliAttraversati = get<3>(tutteInfo);
+
+  rc nodoCorrente = start;
+  bool found = true;
   do {
+    if (anelliAttraversati > (blacks.size() + whites.size()) * 0.2) {
+      matrix[end.first][end.second].vis = false;
+    }
     rc vicino = findNear(nodoCorrente);
     short tipoCur = matrix[nodoCorrente.first][nodoCorrente.second].type;
     short tipoVicino = matrix[vicino.first][vicino.second].type;
+    if (getDistance(nodoCorrente, vicino) == 1) {
+      string path = findPath(nodoCorrente, vicino);
+
+      percorsoFinale.sputc(path[0]);
+      previousDir = dir;
+      dir = path[0];
+      anelliAttraversati++;
+      nodoCorrente = vicino;
+      continue;
+    }
     vector<pair<rc, string>> partenze =
         tipoCur == BIANCO ? esciDaBianco(nodoCorrente, dir, previousDir)
-                          : esciDaNero(nodoCorrente, c);
+                          : esciDaNero(nodoCorrente, dir);
     vector<pair<rc, string>> arrivi = tipoVicino == BIANCO
                                           ? entraInBianco(vicino)
                                           : entraInNero(vicino, nodoCorrente);
@@ -192,6 +215,14 @@ void goRadar() {
       found = false;
       continue;
     }
+
+    int mosseLen = mosseMigliori.length();
+    if (mosseLen > 1)
+      previousDir = mosseMigliori[mosseLen - 2];
+    else
+      previousDir = dir;
+    dir = mosseMigliori[mosseLen - 1];
+
     nodoCorrente = vicino;
     anelliAttraversati++;
     for (char c : mosseMigliori)
@@ -199,9 +230,8 @@ void goRadar() {
   } while (found);
   // print sol
   string finalPath = percorsoFinale.str();
-  out << anelliAttraversati << " " << finalPath.length() << " "
-      << cAndB.second.first << " " << cAndB.second.second << " " << finalPath
-      << "#\n";
+  out << anelliAttraversati << " " << finalPath.length() << " " << end.first
+      << " " << end.second << " " << finalPath << "#\n";
 }
 
 bool white(short row, short col) {
@@ -210,34 +240,80 @@ bool white(short row, short col) {
   } else
     return matrix[row][col].type == BIANCO;
 }
-
-pair<char, rc> findNeroBelo() {
+// path start end numAnelliAttr
+tuple<string, rc, rc, int> findNeroBelo() {
   for (rc black : blacks) { // nero con 2
     bool whiteTop, whiteBottom, whiteLeft, whiteRight;
-    whiteTop = white(black.first--, black.second);
-    whiteBottom = white(black.first++, black.second);
-    whiteLeft = white(black.first, black.second--);
-    whiteRight = white(black.first, black.second++);
-    if (whiteTop && (whiteLeft || whiteRight))
-      return pair<char, rc>('D', black);
-    if (whiteBottom && (whiteLeft || whiteRight))
-      return pair<char, rc>('U', black);
+    whiteTop = white(black.first - 1, black.second);
+    whiteBottom = white(black.first + 1, black.second);
+    whiteLeft = white(black.first, black.second - 1);
+    whiteRight = white(black.first, black.second + 1);
+    rc left, right, top, bottom;
+    left = right = top = bottom = black;
+    left.second--;
+    right.second++;
+    top.first--;
+    bottom.first++;
+
+    if (whiteTop && (whiteLeft || whiteRight)) {
+      matrix[black.first][black.second].vis = true;
+      matrix[top.first][top.second].vis = true;
+      if (whiteRight) // white on the right and top
+
+        return tuple<string, rc, rc, int>("LU", top, right, 2);
+      else { // white on the left and top
+        return tuple<string, rc, rc, int>("RU", top, left, 2);
+      }
+    }
+    if (whiteBottom && (whiteLeft || whiteRight)) {
+      matrix[black.first][black.second].vis = true;
+      matrix[bottom.first][bottom.second].vis = true;
+      if (whiteRight) { // white on right and bottom
+        return tuple<string, rc, rc, int>("LD", bottom, right, 2);
+      } else { // white on left and bottom
+        return tuple<string, rc, rc, int>("RD", bottom, left, 2);
+      }
+    }
   }
+
   for (rc black : blacks) { // nero con 1
     bool whiteTop, whiteBottom, whiteLeft, whiteRight;
-    whiteTop = white(black.first--, black.second);
-    whiteBottom = white(black.first++, black.second);
-    whiteLeft = white(black.first++, black.second);
-    whiteRight = white(black.first++, black.second);
-    if (whiteTop)
-      return pair<char, rc>('D', black);
-    if (whiteBottom)
-      return pair<char, rc>('U', black);
-    if (whiteLeft)
-      return pair<char, rc>('R', black);
-    if (whiteRight)
-      return pair<char, rc>('L', black);
+    whiteTop = white(black.first - 1, black.second);
+    whiteBottom = white(black.first + 1, black.second);
+    whiteLeft = white(black.first + 1, black.second);
+    whiteRight = white(black.first + 1, black.second);
+    rc left, right, top, bottom;
+    left = right = top = bottom = black;
+    left.second--;
+    right.second++;
+    top.first--;
+    bottom.first++;
+
+    if (whiteTop) {
+      matrix[black.first][black.second].vis = true;
+      matrix[top.first][top.second].vis = true;
+      return tuple<string, rc, rc, int>("U", top, black, 1);
+    }
+    if (whiteBottom) {
+      matrix[black.first][black.second].vis = true;
+      matrix[bottom.first][bottom.second].vis = true;
+      return tuple<string, rc, rc, int>("D", bottom, black, 1);
+    }
+    if (whiteLeft) {
+      matrix[black.first][black.second].vis = true;
+      matrix[left.first][left.second].vis = true;
+      return tuple<string, rc, rc, int>("L", left, black, 1);
+    }
+    if (whiteRight) {
+      matrix[black.first][black.second].vis = true;
+      matrix[right.first][right.second].vis = true;
+      return tuple<string, rc, rc, int>("R", right, black, 1);
+    }
   }
+}
+
+bool inMatrix(short row, short col) {
+  return row >= 0 && row < n && col >= 0 && col < m;
 }
 
 rc findNear(rc pos) {
@@ -250,13 +326,15 @@ rc findNear(rc pos) {
     if (pos.first - misuraLato >= 0) { // top
       int row = pos.first - misuraLato;
       for (int i = -misuraLato; i <= misuraLato; i++) {
-        cell c = matrix[row][pos.second + i];
-        if (c.type != VUOTO && !c.vis) {
-          float distance =
-              pow(pos.first - row, 2) + pow(pos.second - pos.second + i, 2);
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            bestCell = rc(row, pos.second + i);
+        if (inMatrix(row, pos.second + i)) {
+          cell c = matrix[row][pos.second + i];
+          if (c.type != VUOTO && !c.vis) {
+            float distance =
+                pow(pos.first - row, 2) + pow(pos.second - pos.second + i, 2);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestCell = rc(row, pos.second + i);
+            }
           }
         }
       }
@@ -264,13 +342,15 @@ rc findNear(rc pos) {
     if (pos.first + misuraLato < n) { // bottom
       int row = pos.first + misuraLato;
       for (int i = -misuraLato; i <= misuraLato; i++) {
-        cell c = matrix[row][pos.second + i];
-        if (c.type != VUOTO && !c.vis) {
-          float distance =
-              pow(pos.first - row, 2) + pow(pos.second - pos.second + i, 2);
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            bestCell = rc(row, pos.second + i);
+        if (inMatrix(row, pos.second + i)) {
+          cell c = matrix[row][pos.second + i];
+          if (c.type != VUOTO && !c.vis) {
+            float distance =
+                pow(pos.first - row, 2) + pow(pos.second - pos.second + i, 2);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestCell = rc(row, pos.second + i);
+            }
           }
         }
       }
@@ -278,13 +358,15 @@ rc findNear(rc pos) {
     if (pos.second - misuraLato >= 0) { // left
       int col = pos.second - misuraLato;
       for (int i = -misuraLato + 1; i < misuraLato; i++) {
-        cell c = matrix[pos.first + i][col];
-        if (c.type != VUOTO && !c.vis) {
-          float distance =
-              pow(pos.first - pos.first + i, 2) + pow(pos.second - col, 2);
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            bestCell = rc(pos.first + i, col);
+        if (inMatrix(pos.first + i, col)) {
+          cell c = matrix[pos.first + i][col];
+          if (c.type != VUOTO && !c.vis) {
+            float distance =
+                pow(pos.first - pos.first + i, 2) + pow(pos.second - col, 2);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestCell = rc(pos.first + i, col);
+            }
           }
         }
       }
@@ -292,13 +374,15 @@ rc findNear(rc pos) {
     if (pos.second + misuraLato < m) { // right
       int col = pos.second + misuraLato;
       for (int i = -misuraLato + 1; i < misuraLato; i++) {
-        cell c = matrix[pos.first + i][col];
-        if (c.type != VUOTO && !c.vis) {
-          float distance =
-              pow(pos.first - pos.first + i, 2) + pow(pos.second - col, 2);
-          if (distance < bestDistance) {
-            bestDistance = distance;
-            bestCell = rc(pos.first + i, col);
+        if (inMatrix(pos.first + i, col)) {
+          cell c = matrix[pos.first + i][col];
+          if (c.type != VUOTO && !c.vis) {
+            float distance =
+                pow(pos.first - pos.first + i, 2) + pow(pos.second - col, 2);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestCell = rc(pos.first + i, col);
+            }
           }
         }
       }
@@ -358,66 +442,65 @@ vector<pair<rc, string>> entraInNero(rc nero, rc other) {
 vector<pair<rc, string>> esciDaBianco(rc bianco, char dir, char prevDir) {
   vector<pair<rc, string>> sol = vector<pair<rc, string>>();
   if (dir != prevDir) { // entra con curva, esci dritto
-    if (dir == 'U' && bianco.second - 1 > 0 &&
-        !matrix[bianco.first][bianco.second - 1].vis) {
-      sol.push_back(pair<rc, string>(rc(bianco.first, bianco.second - 1), "U"));
-
-    } else if (dir == 'D' && bianco.second + 1 < m &&
-               !matrix[bianco.first][bianco.second + 1].vis) {
-      sol.push_back(pair<rc, string>(rc(bianco.first, bianco.second + 1), "D"));
-
-    } else if (dir == 'R' && bianco.first + 1 < n &&
+    if (dir == 'U' && bianco.first - 1 >= 0 &&
+        !matrix[bianco.first - 1][bianco.second].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first - 1, bianco.second), "U"));
+    } else if (dir == 'D' && bianco.first + 1 < n &&
                !matrix[bianco.first + 1][bianco.second].vis) {
-      sol.push_back(pair<rc, string>(rc(bianco.first + 1, bianco.second), "R"));
+      sol.push_back(pair<rc, string>(rc(bianco.first + 1, bianco.second), "D"));
 
-    } else if (dir == 'L' && bianco.first - 1 > 0 &&
-               !matrix[bianco.first - 1][bianco.second].vis) {
-      sol.push_back(pair<rc, string>(rc(bianco.first - 1, bianco.second), "L"));
+    } else if (dir == 'R' && bianco.second + 1 < m &&
+               !matrix[bianco.first][bianco.second + 1].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first, bianco.second + 1), "R"));
+
+    } else if (dir == 'L' && bianco.second - 1 >= 0 &&
+               !matrix[bianco.first][bianco.second - 1].vis) {
+      sol.push_back(pair<rc, string>(rc(bianco.first, bianco.second - 1), "L"));
     }
   } else {
-    if (dir == 'U' && bianco.second - 1 > 0 &&
-        !matrix[bianco.first][bianco.second - 1].vis) {
-      if (bianco.first - 1 > 0 &&
-          !matrix[bianco.first - 1][bianco.second - 1].vis)
+    if (dir == 'U' && bianco.first - 1 >= 0 &&
+        !matrix[bianco.first - 1][bianco.second].vis) {
+      if (bianco.second - 1 >= 0 &&
+          !matrix[bianco.first - 1][bianco.second - 1].vis) // left
         sol.push_back(
-            pair<rc, string>(rc(bianco.first, bianco.second - 1), "UL"));
-      if (bianco.first + 1 < n &&
-          !matrix[bianco.first - 1][bianco.second - 1].vis)
-        sol.push_back(
-            pair<rc, string>(rc(bianco.first, bianco.second - 1), "UR"));
-
-    } else if (dir == 'D' && bianco.second + 1 < m &&
-               !matrix[bianco.first][bianco.second + 1].vis) {
-      if (bianco.first - 1 > 0 &&
+            pair<rc, string>(rc(bianco.first - 1, bianco.second - 1), "UL"));
+      if (bianco.second + 1 < m &&
           !matrix[bianco.first - 1][bianco.second + 1].vis)
         sol.push_back(
-            pair<rc, string>(rc(bianco.first - 1, bianco.second + 1), "DL"));
+            pair<rc, string>(rc(bianco.first - 1, bianco.second + 1), "UR"));
+
+    } else if (dir == 'D' && bianco.first + 1 < n &&
+               !matrix[bianco.first + 1][bianco.second].vis) {
+      if (bianco.second - 1 >= 0 &&
+          !matrix[bianco.first + 1][bianco.second - 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first + 1, bianco.second - 1), "DL"));
+      if (bianco.second + 1 < m &&
+          !matrix[bianco.first + 1][bianco.second + 1].vis)
+        sol.push_back(
+            pair<rc, string>(rc(bianco.first + 1, bianco.second + 1), "DR"));
+
+    } else if (dir == 'R' && bianco.second + 1 < m &&
+               !matrix[bianco.first][bianco.second + 1].vis) {
       if (bianco.first + 1 < n &&
           !matrix[bianco.first + 1][bianco.second + 1].vis)
         sol.push_back(
-            pair<rc, string>(rc(bianco.first + 1, bianco.second + 1), "DL"));
-
-    } else if (dir == 'R' && bianco.first + 1 < n &&
-               !matrix[bianco.first + 1][bianco.second].vis) {
-      if (bianco.second - 1 > 0 &&
-          !matrix[bianco.first + 1][bianco.second - 1].vis)
+            pair<rc, string>(rc(bianco.first + 1, bianco.second + 1), "RD"));
+      if (bianco.first - 1 >= 0 &&
+          !matrix[bianco.first - 1][bianco.second + 1].vis)
         sol.push_back(
-            pair<rc, string>(rc(bianco.first + 1, bianco.second - 1), "RD"));
-      if (bianco.second + 1 < m &&
-          !matrix[bianco.first + 1][bianco.second + 1].vis)
-        sol.push_back(
-            pair<rc, string>(rc(bianco.first + 1, bianco.second + 1), "RU"));
+            pair<rc, string>(rc(bianco.first - 1, bianco.second + 1), "RU"));
 
-    } else if (dir == 'L' && bianco.first - 1 > 0 &&
-               !matrix[bianco.first - 1][bianco.second].vis) {
-      if (bianco.second - 1 > 0 &&
-          !matrix[bianco.first + 1][bianco.second - 1].vis)
+    } else if (dir == 'L' && bianco.second - 1 >= 0 &&
+               !matrix[bianco.first][bianco.second - 1].vis) {
+      if (bianco.first - 1 >= 0 &&
+          !matrix[bianco.first - 1][bianco.second - 1].vis)
         sol.push_back(
             pair<rc, string>(rc(bianco.first - 1, bianco.second - 1), "LU"));
-      if (bianco.second + 1 < m &&
-          !matrix[bianco.first + 1][bianco.second + 1].vis)
+      if (bianco.first + 1 < n &&
+          !matrix[bianco.first + 1][bianco.second - 1].vis)
         sol.push_back(
-            pair<rc, string>(rc(bianco.first - 1, bianco.second + 1), "LU"));
+            pair<rc, string>(rc(bianco.first + 1, bianco.second - 1), "LD"));
     }
   }
   return sol;
