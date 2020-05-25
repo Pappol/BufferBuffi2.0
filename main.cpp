@@ -50,6 +50,7 @@ vector<pair<rc, string>> entraInBianco(rc bianco);
 void goRadar();
 string ricostruisciPercorso(stack<rc> celle);
 string findPath(rc from, rc to);
+pair<char, rc> findNeroBelo();
 
 int main() {
   int B, W;
@@ -159,8 +160,84 @@ void goRadar() {
   for (int i = 0; i < n; i++)
     for (int j = 0; j < m; j++)
       matrix[i][j].vis = false;
-  rc cur = blacks[0];
-  vector<bool> visited = vector<bool>(blacks.size());
+  char previousDir, dir;
+  pair<char, rc> cAndB = findNeroBelo();
+  char c = cAndB.first;
+  rc nodoCorrente = cAndB.second;
+  bool found = true;
+  stringbuf percorsoFinale = stringbuf();
+  int anelliAttraversati = 0;
+  do {
+    rc vicino = findNear(nodoCorrente);
+    short tipoCur = matrix[nodoCorrente.first][nodoCorrente.second].type;
+    short tipoVicino = matrix[vicino.first][vicino.second].type;
+    vector<pair<rc, string>> partenze =
+        tipoCur == BIANCO ? esciDaBianco(nodoCorrente, dir, previousDir)
+                          : esciDaNero(nodoCorrente, c);
+    vector<pair<rc, string>> arrivi = tipoVicino == BIANCO
+                                          ? entraInBianco(vicino)
+                                          : entraInNero(vicino, nodoCorrente);
+    string mosseMigliori = "";
+    for (pair<rc, string> partenza : partenze) {
+      for (pair<rc, string> arrivo : arrivi) {
+        string path = findPath(partenza.first, arrivo.first);
+        string mosseQui = partenza.second + mosseMigliori + arrivo.second;
+        if (path != "paccone" && mosseQui.length() < mosseMigliori.length() ||
+            mosseMigliori.length() == 0) {
+          mosseMigliori = mosseQui;
+        }
+      }
+    }
+    if (mosseMigliori == "") {
+      found = false;
+      continue;
+    }
+    nodoCorrente = vicino;
+    anelliAttraversati++;
+    for (char c : mosseMigliori)
+      percorsoFinale.sputc(c);
+  } while (found);
+  // print sol
+  string finalPath = percorsoFinale.str();
+  out << anelliAttraversati << " " << finalPath.length() << " "
+      << cAndB.second.first << " " << cAndB.second.second << " " << finalPath
+      << "#\n";
+}
+
+bool white(short row, short col) {
+  if (row < 0 || row >= n || col < 0 || col >= m) {
+    return false;
+  } else
+    return matrix[row][col].type == BIANCO;
+}
+
+pair<char, rc> findNeroBelo() {
+  for (rc black : blacks) { // nero con 2
+    bool whiteTop, whiteBottom, whiteLeft, whiteRight;
+    whiteTop = white(black.first--, black.second);
+    whiteBottom = white(black.first++, black.second);
+    whiteLeft = white(black.first++, black.second);
+    whiteRight = white(black.first++, black.second);
+    if (whiteTop && (whiteLeft || whiteRight))
+      return pair<char, rc>('D', black);
+    if (whiteBottom && (whiteLeft || whiteRight))
+      return pair<char, rc>('U', black);
+  }
+  for (rc black : blacks) { // nero con 1
+    bool whiteTop, whiteBottom, whiteLeft, whiteRight;
+    whiteTop = white(black.first--, black.second);
+    whiteBottom = white(black.first++, black.second);
+    whiteLeft = white(black.first++, black.second);
+    whiteRight = white(black.first++, black.second);
+    if (whiteTop)
+      return pair<char, rc>('D', black);
+    if (whiteBottom)
+      return pair<char, rc>('U', black);
+    if (whiteLeft)
+      return pair<char, rc>('R', black);
+    if (whiteRight)
+      return pair<char, rc>('L', black);
+  }
 }
 
 rc findNear(rc pos) {
