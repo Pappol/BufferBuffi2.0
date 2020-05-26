@@ -10,12 +10,17 @@ using namespace std;
 // Pair: row and column
 typedef pair<ushort, ushort> rc;
 // distance and row, column
-typedef pair<int, rc> distRC;
 
-struct dist_comp {
-  bool operator()(const distRC &lhs, const distRC &rhs) const {
-    return lhs.first <= rhs.first;
+struct distRC {
+public:
+  distRC(int a, rc v) {
+    val = v;
+    dist = a;
   }
+  int dist;
+  rc val;
+
+  bool operator<(const distRC &p) const { return dist > p.dist; }
 };
 
 // Cell data structure
@@ -88,7 +93,6 @@ int main() {
     //   return 0;
   }
 
-  cout << findPath(rc(4, 4), rc(4, 5));
   // Go
   goRadar();
 
@@ -588,8 +592,8 @@ int getDistance(rc from, rc to) {
 }
 
 string findPath(rc from, rc to) {
-  priority_queue<distRC, vector<distRC>, dist_comp> pq =
-      priority_queue<distRC, vector<distRC>, dist_comp>();
+  vector<rc> rcs;
+  priority_queue<distRC> pq = priority_queue<distRC>();
   rc current = from;
   int baseDistance = getDistance(from, to);
   int maxDist = 2 * baseDistance - 1; // at max go this far
@@ -603,20 +607,10 @@ string findPath(rc from, rc to) {
   pq.push(distRC(baseDistance, current));
   do {
     const distRC distanzaECellaPiuVicina = pq.top();
-    current = distanzaECellaPiuVicina.second;
+    current = distanzaECellaPiuVicina.val;
     int pqSizeBefore = pq.size();
     {                          // aggiunge celle possibili
       if (current.first > 0) { // top
-        {                      // top left
-          // if (current.second > 0) { // top left
-          //   rc tl = rc(current.first - 1, current.second - 1);
-          //   if (!matrix[tl.first][tl.second].vis) {
-          //     int distTL = getDistance(tl, to);
-          //     pq.insert(distRC(distTL, tl));
-          //   }
-          // }
-          // top center
-        }
         rc tt = rc(current.first - 1, current.second);
         if (!matrix[tt.first][tt.second].vis) {
           int distTT = getDistance(tt, to);
@@ -625,15 +619,6 @@ string findPath(rc from, rc to) {
             parent[tt.first][tt.second] = current;
             visitedHere[tt.first][tt.second] = true;
           }
-        }
-        { // top right
-          // if (current.second + 1 < m) { // top right
-          //   rc tr = rc(current.first - 1, current.second + 1);
-          //   if (!matrix[tr.first][tr.second].vis) {
-          //     int distrRR = getDistance(tr, to);
-          //     pq.insert(distRC(distrRR, tr));
-          //   }
-          // }
         }
       }
       if (current.second + 1 < m) { // right
@@ -659,15 +644,6 @@ string findPath(rc from, rc to) {
         }
       }
       if (current.first + 1 < n) { // bottom
-        {                          // bottom left
-          // if (current.second > 0) {  // bl
-          //   rc bl = rc(current.first + 1, current.second - 1);
-          //   if (!matrix[bl.first][bl.second].vis) {
-          //     int distBL = getDistance(bl, to);
-          //     pq.insert(distRC(distBL, bl));
-          //   }
-          // }
-        }
         // center
         rc bb = rc(current.first + 1, current.second);
         if (!matrix[bb.first][bb.second].vis) {
@@ -678,25 +654,15 @@ string findPath(rc from, rc to) {
             visitedHere[bb.first][bb.second] = true;
           }
         }
-        { // bottom right
-          // if (current.second + 1 < m) { // br
-          //   rc br = rc(current.first + 1, current.second + 1);
-          //   if (!matrix[br.first][br.second].vis) {
-          //     int distBR = getDistance(br, to);
-          //     pq.insert(distRC(distBR, br));
-          //   }
-          // }
-        }
       }
     }
     vector<distRC> smaller = vector<distRC>();
-    distRC s;
     while (1) {
-      s = pq.top();
+      distRC s = pq.top();
       pq.pop();
-      if (s.first != distanzaECellaPiuVicina.first ||
-          s.second.first != distanzaECellaPiuVicina.second.first ||
-          s.second.second != distanzaECellaPiuVicina.second.second)
+      if (s.dist != distanzaECellaPiuVicina.dist ||
+          s.val.first != distanzaECellaPiuVicina.val.first ||
+          s.val.second != distanzaECellaPiuVicina.val.second)
         smaller.push_back(s);
       else
         break;
