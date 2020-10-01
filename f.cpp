@@ -18,6 +18,16 @@ typedef struct {
 
 vector<vector<cell>> matrix;
 
+bool isWhite(cell c){
+    if (c.type == 1) return true;
+    return false;
+}
+
+bool isBlack(cell c){
+    if (c.type == 2) return true;
+    return false;
+}
+
 //TO DO
 char pickRandom(bool U, bool D, bool R, bool L, char prec){
     //prec: movimento precedente
